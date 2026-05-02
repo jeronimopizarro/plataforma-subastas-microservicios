@@ -1,0 +1,89 @@
+package com.portafolio.subastas.domain.entity;
+
+import com.portafolio.subastas.domain.enums.AuctionStatus;
+import com.portafolio.subastas.domain.exception.InvalidAuctionException;
+import com.portafolio.subastas.domain.exception.InvalidAuctionStateException;
+import lombok.Getter;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Getter
+public class Auction {
+
+    private final Long id;
+    private final Long productId;
+    private final Long sellerId;
+    private final BigDecimal startingPrice;
+    private BigDecimal currentHighestBid;
+    private final LocalDateTime startTime;
+    private final LocalDateTime endTime;
+    private AuctionStatus status;
+    private Long winnerId;
+
+    private Auction(Long id, Long productId, Long sellerId, BigDecimal startingPrice,
+                    BigDecimal currentHighestBid, LocalDateTime startTime, LocalDateTime endTime,
+                    AuctionStatus status, Long winnerId) {
+        this.id = id;
+        this.productId = productId;
+        this.sellerId = sellerId;
+        this.startingPrice = startingPrice;
+        this.currentHighestBid = currentHighestBid;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.status = status != null ? status : AuctionStatus.DRAFT;
+        this.winnerId = winnerId;
+        validate();
+    }
+
+    private void validate() {
+        if (this.productId == null || this.sellerId == null) {
+            throw new InvalidAuctionException("La subasta debe estar asociada a un producto y un vendedor.");
+        }
+        if (this.startingPrice == null || this.startingPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidAuctionException("El precio inicial debe ser mayor a cero.");
+        }
+        if (this.startTime == null || this.endTime == null || this.endTime.isBefore(this.startTime)) {
+            throw new InvalidAuctionException("Las fechas de la subasta son inválidas.");
+        }
+    }
+
+    public static Auction createNew(Long productId, Long sellerId, BigDecimal startingPrice,
+                                    LocalDateTime startTime, LocalDateTime endTime) {
+        return new Auction(null, productId, sellerId, startingPrice, startingPrice,
+                startTime, endTime, AuctionStatus.DRAFT, null);
+    }
+
+    public static Auction restore(Long id, Long productId, Long sellerId, BigDecimal startingPrice,
+                                  BigDecimal currentHighestBid, LocalDateTime startTime, LocalDateTime endTime,
+                                  AuctionStatus status, Long winnerId) {
+        return new Auction(id, productId, sellerId, startingPrice, currentHighestBid,
+                startTime, endTime, status, winnerId);
+    }
+
+    public void start() {
+        if (this.status != AuctionStatus.DRAFT) {
+            throw new InvalidAuctionStateException("Solo las subastas en DRAFT pueden iniciarse.");
+        }
+        if (LocalDateTime.now().isAfter(this.endTime)) {
+            throw new InvalidAuctionException("No se puede iniciar una subasta cuya fecha de fin ya pasó.");
+        }
+        this.status = AuctionStatus.ACTIVE;
+    }
+
+    public void finish(Long finalWinnerId, BigDecimal finalPrice) {
+        if (this.status != AuctionStatus.ACTIVE) {
+            throw new InvalidAuctionStateException("Solo las subastas ACTIVAS pueden finalizarse.");
+        }
+        this.status = AuctionStatus.FINISHED;
+        this.winnerId = finalWinnerId;
+        this.currentHighestBid = finalPrice;
+    }
+
+    public void cancel() {
+        if (this.status == AuctionStatus.FINISHED) {
+            throw new InvalidAuctionStateException("No se puede cancelar una subasta que ya finalizó.");
+        }
+        this.status = AuctionStatus.CANCELLED;
+    }
+}
