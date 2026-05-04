@@ -1,7 +1,15 @@
 package com.portafolio.subastas.domain.exception;
 
 public abstract class DomainException extends RuntimeException {
-    public DomainException(String message) {
+
+    private final ErrorCode errorCode;
+
+    public DomainException(String message, ErrorCode errorCode) {
         super(message);
+        this.errorCode = errorCode;
+    }
+
+    public ErrorCode getErrorCode() {
+        return errorCode;
     }
 }

@@ -24,7 +24,7 @@ public class ProductEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "item_condition", nullable = false, length = 50)
     private String condition;
 
     @Column(name = "image_url")

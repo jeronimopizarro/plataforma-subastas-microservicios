@@ -5,7 +5,9 @@ import com.portafolio.subastas.domain.entity.Auction;
 import com.portafolio.subastas.domain.exception.ProductNotFoundException;
 import com.portafolio.subastas.domain.repository.AuctionRepository;
 import com.portafolio.subastas.domain.repository.ProductRepository;
+import org.springframework.stereotype.Service;
 
+@Service
 public class CreateAuctionUseCase {
 
     private final AuctionRepository auctionRepository;
@@ -26,7 +28,7 @@ public class CreateAuctionUseCase {
 
     private void ensureProductIsAvailable(Long productId) {
         productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("El producto con ID " + productId + " no existe."));
+                .orElseThrow(() -> new ProductNotFoundException(productId));
     }
 
     private Auction buildAuctionFrom(CreateAuctionCommand command) {
