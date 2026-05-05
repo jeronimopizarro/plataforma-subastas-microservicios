@@ -84,6 +84,10 @@ public class Auction {
         if (this.status == AuctionStatus.FINISHED) {
             throw new InvalidAuctionStateException("No se puede cancelar una subasta que ya finalizó.");
         }
+        if (this.status == AuctionStatus.CANCELLED) {
+            throw new InvalidAuctionStateException("La subasta ya se encuentra cancelada.");
+        }
+
         this.status = AuctionStatus.CANCELLED;
     }
 }

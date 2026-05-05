@@ -1,6 +1,7 @@
 package com.portafolio.subastas.web.controller;
 
 import com.portafolio.subastas.application.dto.CreateAuctionCommand;
+import com.portafolio.subastas.application.usecase.CancelAuctionUseCase;
 import com.portafolio.subastas.application.usecase.CreateAuctionUseCase;
 import com.portafolio.subastas.application.usecase.FindAuctionByIdUseCase;
 import com.portafolio.subastas.application.usecase.ListAuctionsByStatusUseCase;
@@ -21,13 +22,16 @@ public class AuctionController {
     private final CreateAuctionUseCase createAuctionUseCase;
     private final FindAuctionByIdUseCase findAuctionByIdUseCase;
     private final ListAuctionsByStatusUseCase listAuctionsByStatusUseCase;
+    private final CancelAuctionUseCase cancelAuctionUseCase;
 
     public AuctionController(CreateAuctionUseCase createAuctionUseCase,
                              FindAuctionByIdUseCase findAuctionByIdUseCase,
-                             ListAuctionsByStatusUseCase listAuctionsByStatusUseCase) {
+                             ListAuctionsByStatusUseCase listAuctionsByStatusUseCase,
+                             CancelAuctionUseCase cancelAuctionUseCase) {
         this.createAuctionUseCase = createAuctionUseCase;
         this.findAuctionByIdUseCase = findAuctionByIdUseCase;
         this.listAuctionsByStatusUseCase = listAuctionsByStatusUseCase;
+        this.cancelAuctionUseCase = cancelAuctionUseCase;
     }
 
     @PostMapping
@@ -53,6 +57,12 @@ public class AuctionController {
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(auctions);
+    }
+
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<Void> cancelAuction(@PathVariable Long id) {
+        cancelAuctionUseCase.execute(id);
+        return ResponseEntity.noContent().build();
     }
 
     private AuctionResponse mapToResponse(Auction auction) {

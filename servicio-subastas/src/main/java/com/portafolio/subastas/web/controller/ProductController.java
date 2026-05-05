@@ -2,6 +2,7 @@ package com.portafolio.subastas.web.controller;
 
 import com.portafolio.subastas.application.dto.CreateProductCommand;
 import com.portafolio.subastas.application.usecase.CreateProductUseCase;
+import com.portafolio.subastas.application.usecase.DeactivateProductUseCase;
 import com.portafolio.subastas.application.usecase.FindProductByIdUseCase;
 import com.portafolio.subastas.application.usecase.ListProductsUseCase;
 import com.portafolio.subastas.domain.entity.Product;
@@ -20,13 +21,16 @@ public class ProductController {
     private final CreateProductUseCase createProductUseCase;
     private final FindProductByIdUseCase findProductByIdUseCase;
     private final ListProductsUseCase listProductsUseCase;
+    private final DeactivateProductUseCase deactivateProductUseCase;
 
     public ProductController(CreateProductUseCase createProductUseCase,
                              FindProductByIdUseCase findProductByIdUseCase,
-                             ListProductsUseCase listProductsUseCase) {
+                             ListProductsUseCase listProductsUseCase,
+                             DeactivateProductUseCase deactivateProductUseCase) {
         this.createProductUseCase = createProductUseCase;
         this.findProductByIdUseCase = findProductByIdUseCase;
         this.listProductsUseCase = listProductsUseCase;
+        this.deactivateProductUseCase = deactivateProductUseCase;
     }
 
     @PostMapping
@@ -51,6 +55,12 @@ public class ProductController {
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(products);
+    }
+
+    @PatchMapping("/{id}/deactivate")
+    public ResponseEntity<Void> deactivateProduct(@PathVariable Long id) {
+        deactivateProductUseCase.execute(id);
+        return ResponseEntity.noContent().build();
     }
 
     private ProductResponse mapToResponse(Product product) {
