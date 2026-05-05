@@ -1,13 +1,16 @@
 package com.portafolio.subastas.infrastructure.adapter;
 
 import com.portafolio.subastas.domain.entity.Auction;
+import com.portafolio.subastas.domain.enums.AuctionStatus;
 import com.portafolio.subastas.domain.repository.AuctionRepository;
 import com.portafolio.subastas.infrastructure.entity.AuctionEntity;
 import com.portafolio.subastas.infrastructure.mapper.AuctionMapper;
 import com.portafolio.subastas.infrastructure.repository.JpaAuctionRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public class AuctionRepositoryAdapter implements AuctionRepository {
@@ -31,5 +34,13 @@ public class AuctionRepositoryAdapter implements AuctionRepository {
     public Optional<Auction> findById(Long id) {
         return jpaRepository.findById(id)
                 .map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Auction> findByStatus(AuctionStatus status) {
+        return jpaRepository.findByStatus(status)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
     }
 }

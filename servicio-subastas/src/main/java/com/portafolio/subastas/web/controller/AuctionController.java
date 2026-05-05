@@ -2,23 +2,32 @@ package com.portafolio.subastas.web.controller;
 
 import com.portafolio.subastas.application.dto.CreateAuctionCommand;
 import com.portafolio.subastas.application.usecase.CreateAuctionUseCase;
+import com.portafolio.subastas.application.usecase.FindAuctionByIdUseCase;
+import com.portafolio.subastas.application.usecase.ListAuctionsByStatusUseCase;
 import com.portafolio.subastas.domain.entity.Auction;
+import com.portafolio.subastas.domain.enums.AuctionStatus;
 import com.portafolio.subastas.web.dto.AuctionResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/auctions")
 public class AuctionController {
 
     private final CreateAuctionUseCase createAuctionUseCase;
+    private final FindAuctionByIdUseCase findAuctionByIdUseCase;
+    private final ListAuctionsByStatusUseCase listAuctionsByStatusUseCase;
 
-    public AuctionController(CreateAuctionUseCase createAuctionUseCase) {
+    public AuctionController(CreateAuctionUseCase createAuctionUseCase,
+                             FindAuctionByIdUseCase findAuctionByIdUseCase,
+                             ListAuctionsByStatusUseCase listAuctionsByStatusUseCase) {
         this.createAuctionUseCase = createAuctionUseCase;
+        this.findAuctionByIdUseCase = findAuctionByIdUseCase;
+        this.listAuctionsByStatusUseCase = listAuctionsByStatusUseCase;
     }
 
     @PostMapping
@@ -26,6 +35,24 @@ public class AuctionController {
         Auction savedAuction = createAuctionUseCase.execute(command);
         AuctionResponse response = mapToResponse(savedAuction);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AuctionResponse> getAuctionById(@PathVariable Long id) {
+        Auction auction = findAuctionByIdUseCase.execute(id);
+        return ResponseEntity.ok(mapToResponse(auction));
+    }
+
+    // Si el usuario no manda el parámetro, por defecto buscamos las ACTIVE.
+    @GetMapping
+    public ResponseEntity<List<AuctionResponse>> getAuctionsByStatus(
+            @RequestParam(defaultValue = "ACTIVE") AuctionStatus status) {
+
+        List<AuctionResponse> auctions = listAuctionsByStatusUseCase.execute(status)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(auctions);
     }
 
     private AuctionResponse mapToResponse(Auction auction) {
