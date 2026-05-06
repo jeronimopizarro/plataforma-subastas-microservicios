@@ -75,6 +75,7 @@ public class Auction {
         if (this.status != AuctionStatus.ACTIVE) {
             throw new InvalidAuctionStateException("Solo las subastas ACTIVAS pueden finalizarse.");
         }
+
         this.status = AuctionStatus.FINISHED;
         this.winnerId = finalWinnerId;
         this.currentHighestBid = finalPrice;

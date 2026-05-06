@@ -12,5 +12,9 @@ import java.util.List;
 public interface JpaAuctionRepository extends JpaRepository<AuctionEntity, Long> {
     List<AuctionEntity> findByStatus(AuctionStatus status);
 
-    List<AuctionEntity> findByStatusAndStartTimeLessThanEqual(AuctionStatus status, LocalDateTime time);
+    List<AuctionEntity> findByStatusAndStartTimeLessThanEqual(AuctionStatus status,
+                                                              LocalDateTime time);
+
+    List<AuctionEntity> findByStatusAndEndTimeLessThanEqual(AuctionStatus status,
+                                                            LocalDateTime time);
 }

@@ -52,4 +52,12 @@ public class AuctionRepositoryAdapter implements AuctionRepository {
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Auction> findAuctionsToFinish(LocalDateTime currentTime) {
+        return jpaRepository.findByStatusAndEndTimeLessThanEqual(AuctionStatus.ACTIVE, currentTime)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
 }

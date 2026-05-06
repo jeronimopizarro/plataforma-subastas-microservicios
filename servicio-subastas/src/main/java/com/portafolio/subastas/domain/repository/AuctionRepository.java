@@ -12,4 +12,5 @@ public interface AuctionRepository {
     Optional<Auction> findById(Long id);
     List<Auction> findByStatus(AuctionStatus status);
     List<Auction> findAuctionsToStart(LocalDateTime currentTime);
+    List<Auction> findAuctionsToFinish(LocalDateTime currentTime);
 }

@@ -9,20 +9,25 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-public class StartAuctionsUseCase {
+public class FinishAuctionsUseCase {
 
     private final AuctionRepository auctionRepository;
     private final AuctionStateProcessor stateProcessor;
 
-    public StartAuctionsUseCase(AuctionRepository auctionRepository,
-                                AuctionStateProcessor stateProcessor) {
+    public FinishAuctionsUseCase(AuctionRepository auctionRepository,
+                                 AuctionStateProcessor stateProcessor) {
         this.auctionRepository = auctionRepository;
         this.stateProcessor = stateProcessor;
     }
 
     public void execute() {
-        List<Auction> pendingToStart = auctionRepository.findAuctionsToStart(LocalDateTime.now());
+        List<Auction> pendingToFinish = auctionRepository.findAuctionsToFinish(LocalDateTime.now());
 
-        stateProcessor.processBatch(pendingToStart, Auction::start, "iniciada");
+        // Usamos una lambda para pasar los parámetros requeridos por tu método finish
+        stateProcessor.processBatch(
+                pendingToFinish,
+                auction -> auction.finish(auction.getWinnerId(), auction.getCurrentHighestBid()),
+                "finalizada"
+        );
     }
 }
