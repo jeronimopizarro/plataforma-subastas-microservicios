@@ -9,8 +9,14 @@ import java.util.Optional;
 
 public interface AuctionRepository {
     Auction save(Auction auction);
+
     Optional<Auction> findById(Long id);
+
     List<Auction> findByStatus(AuctionStatus status);
+
     List<Auction> findAuctionsToStart(LocalDateTime currentTime);
+
     List<Auction> findAuctionsToFinish(LocalDateTime currentTime);
+
+    boolean existsActiveAuctionForProduct(Long productId);
 }

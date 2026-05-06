@@ -2,6 +2,9 @@ package com.portafolio.subastas.application.usecase;
 
 import com.portafolio.subastas.application.dto.CreateAuctionCommand;
 import com.portafolio.subastas.domain.entity.Auction;
+import com.portafolio.subastas.domain.entity.Product;
+import com.portafolio.subastas.domain.exception.InvalidAuctionStateException;
+import com.portafolio.subastas.domain.exception.InvalidProductException;
 import com.portafolio.subastas.domain.exception.ProductNotFoundException;
 import com.portafolio.subastas.domain.repository.AuctionRepository;
 import com.portafolio.subastas.domain.repository.ProductRepository;
@@ -19,16 +22,27 @@ public class CreateAuctionUseCase {
     }
 
     public Auction execute(CreateAuctionCommand command) {
-        ensureProductIsAvailable(command.productId());
+        ensureProductIsActive(command.productId());
+
+        validateNoActiveAuctionsForProduct(command.productId());
 
         Auction newAuction = buildAuctionFrom(command);
-
         return auctionRepository.save(newAuction);
     }
 
-    private void ensureProductIsAvailable(Long productId) {
-        productRepository.findById(productId)
+    private void ensureProductIsActive(Long productId) {
+        Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
+
+        if (!product.isActive()) {
+            throw new InvalidProductException("El producto se encuentra inactivo y no puede ser subastado.");
+        }
+    }
+
+    private void validateNoActiveAuctionsForProduct(Long productId) {
+        if (auctionRepository.existsActiveAuctionForProduct(productId)) {
+            throw new InvalidAuctionStateException("El producto ya se encuentra en una subasta DRAFT o ACTIVE.");
+        }
     }
 
     private Auction buildAuctionFrom(CreateAuctionCommand command) {

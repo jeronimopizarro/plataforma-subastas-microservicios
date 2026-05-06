@@ -60,4 +60,12 @@ public class AuctionRepositoryAdapter implements AuctionRepository {
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public boolean existsActiveAuctionForProduct(Long productId) {
+        return jpaRepository.existsByProductIdAndStatusIn(
+                productId,
+                List.of(AuctionStatus.DRAFT, AuctionStatus.ACTIVE)
+        );
+    }
 }
