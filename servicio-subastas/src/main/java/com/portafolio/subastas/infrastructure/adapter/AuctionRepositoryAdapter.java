@@ -8,6 +8,7 @@ import com.portafolio.subastas.infrastructure.mapper.AuctionMapper;
 import com.portafolio.subastas.infrastructure.repository.JpaAuctionRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -39,6 +40,14 @@ public class AuctionRepositoryAdapter implements AuctionRepository {
     @Override
     public List<Auction> findByStatus(AuctionStatus status) {
         return jpaRepository.findByStatus(status)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Auction> findAuctionsToStart(LocalDateTime currentTime) {
+        return jpaRepository.findByStatusAndStartTimeLessThanEqual(AuctionStatus.DRAFT, currentTime)
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
