@@ -1,4 +1,4 @@
-package com.portafolio.subastas.domain.exception;
+package com.portafolio.wallet.domain.exception;
 
 import lombok.Getter;
 
@@ -7,7 +7,7 @@ public abstract class DomainException extends RuntimeException {
 
     private final ErrorCode errorCode;
 
-    public DomainException(String message, ErrorCode errorCode) {
+    protected DomainException(String message, ErrorCode errorCode) {
         super(message);
         this.errorCode = errorCode;
     }
