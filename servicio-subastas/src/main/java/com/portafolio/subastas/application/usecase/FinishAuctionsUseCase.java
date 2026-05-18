@@ -23,7 +23,6 @@ public class FinishAuctionsUseCase {
     public void execute() {
         List<Auction> pendingToFinish = auctionRepository.findAuctionsToFinish(LocalDateTime.now());
 
-        // Usamos una lambda para pasar los parámetros requeridos por tu método finish
         stateProcessor.processBatch(
                 pendingToFinish,
                 auction -> auction.finish(auction.getWinnerId(), auction.getCurrentHighestBid()),
