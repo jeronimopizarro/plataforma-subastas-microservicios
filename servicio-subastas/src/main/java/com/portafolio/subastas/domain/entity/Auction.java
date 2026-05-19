@@ -71,6 +71,17 @@ public class Auction {
         this.status = AuctionStatus.ACTIVE;
     }
 
+    public void updateBid(Long newWinnerId, BigDecimal newBidAmount) {
+        if (this.status != AuctionStatus.ACTIVE) {
+            throw new InvalidAuctionStateException("Solo se pueden registrar ofertas en subastas ACTIVAS.");
+        }
+        if (newBidAmount.compareTo(this.currentHighestBid) <= 0) {
+            throw new InvalidAuctionException("El monto de la nueva oferta debe ser mayor a la oferta actual.");
+        }
+        this.currentHighestBid = newBidAmount;
+        this.winnerId = newWinnerId;
+    }
+
     public void finish(Long finalWinnerId, BigDecimal finalPrice) {
         if (this.status != AuctionStatus.ACTIVE) {
             throw new InvalidAuctionStateException("Solo las subastas ACTIVAS pueden finalizarse.");
