@@ -1,6 +1,7 @@
 package com.portafolio.bidding.application.usecase;
 
 import com.portafolio.bidding.application.dto.PlaceBidCommand;
+import com.portafolio.bidding.application.port.BidEventPublisher;
 import com.portafolio.bidding.domain.entity.Bid;
 import com.portafolio.bidding.domain.repository.BidRepository;
 import com.portafolio.bidding.infrastructure.client.AuctionFeignClient;
@@ -18,13 +19,15 @@ public class PlaceBidUseCase {
     private final AuctionFeignClient auctionClient;
     private final WalletFeignClient walletClient;
     private final BidRepository bidRepository;
+    private final BidEventPublisher bidEventPublisher;
 
     public PlaceBidUseCase(AuctionFeignClient auctionClient,
                            WalletFeignClient walletClient,
-                           BidRepository bidRepository) {
+                           BidRepository bidRepository, BidEventPublisher bidEventPublisher) {
         this.auctionClient = auctionClient;
         this.walletClient = walletClient;
         this.bidRepository = bidRepository;
+        this.bidEventPublisher = bidEventPublisher;
     }
 
     public Bid execute(PlaceBidCommand command) {
@@ -37,7 +40,11 @@ public class PlaceBidUseCase {
 
             releaseFundsForPreviousWinner(auction, command.auctionId());
 
-            return saveBidHistory(command.auctionId(), command.bidderId(), command.amount());
+            Bid savedBid = saveBidHistory(command.auctionId(), command.bidderId(), command.amount());
+
+            bidEventPublisher.publishNewBid(savedBid.getAuctionId(), savedBid.getBidderId(), savedBid.getAmount());
+
+            return savedBid;
 
         } catch (Exception e) {
             executeRollback(command.bidderId(), command.amount(), command.auctionId());

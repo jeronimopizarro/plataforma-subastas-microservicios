@@ -1,6 +1,7 @@
 package com.portafolio.bidding.application.usecase;
 
 import com.portafolio.bidding.application.dto.PlaceBidCommand;
+import com.portafolio.bidding.application.port.BidEventPublisher;
 import com.portafolio.bidding.domain.entity.Bid;
 import com.portafolio.bidding.domain.repository.BidRepository;
 import com.portafolio.bidding.infrastructure.client.AuctionFeignClient;
@@ -29,6 +30,7 @@ class PlaceBidUseCaseTest {
     @Mock private AuctionFeignClient auctionClient;
     @Mock private WalletFeignClient walletClient;
     @Mock private BidRepository bidRepository;
+    @Mock private BidEventPublisher bidEventPublisher;
 
     @InjectMocks private PlaceBidUseCase placeBidUseCase;
 
@@ -52,6 +54,7 @@ class PlaceBidUseCaseTest {
         verify(auctionClient, times(1)).updateCurrentBid(eq(1L), any(UpdateBidRequest.class));
         // Verificamos que NO se devolvieron fondos a nadie (porque no había ganador previo)
         verify(walletClient, never()).releaseFunds(anyLong(), any(TransactionRequest.class));
+        verify(bidEventPublisher, times(1)).publishNewBid(eq(1L), eq(2L), eq(new BigDecimal("500.00")));
     }
 
     @Test
@@ -92,5 +95,6 @@ class PlaceBidUseCaseTest {
         verify(walletClient, times(1)).holdFunds(eq(2L), any(TransactionRequest.class));
         verify(walletClient, times(1)).releaseFunds(eq(2L), any(TransactionRequest.class));
         verify(bidRepository, never()).save(any());
+        verify(bidEventPublisher, never()).publishNewBid(anyLong(), anyLong(), any(BigDecimal.class));
     }
 }

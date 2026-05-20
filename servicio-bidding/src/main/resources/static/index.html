@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Subasta en Vivo</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+        .pantalla-subasta { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px;}
+        .precio { font-size: 2em; color: #2ecc71; font-weight: bold; }
+        .historial { margin-top: 20px; font-size: 0.9em; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="pantalla-subasta">
+    <h2>⌚ Reloj Rolex Vintage</h2>
+    <p>Precio Ganador Actual:</p>
+    <div class="precio" id="precio-actual">$100.00</div>
+
+    <div class="historial" id="historial">
+        <strong>Historial de eventos en vivo:</strong><br>
+        <span style="color: blue;">[Sistema] Conectando al túnel de la Subasta #1...</span><br>
+    </div>
+</div>
+
+<script>
+    // 1. Apuntamos al endpoint que definiste en WebSocketConfig
+    var socket = new SockJS('http://localhost:8082/ws-bidding');
+    var stompClient = Stomp.over(socket);
+
+    // 2. Abrimos el túnel
+    stompClient.connect({}, function (frame) {
+        document.getElementById('historial').innerHTML += '<span style="color: green;">[Sistema] ¡Conectado exitosamente! Esperando ofertas...</span><br>';
+
+        // 3. Nos suscribimos a la "sala" de la subasta 1
+        stompClient.subscribe('/topic/auctions/1', function (mensaje) {
+            // Cuando el backend grita, capturamos el JSON
+            var datos = JSON.parse(mensaje.body);
+
+            // Actualizamos la pantalla instantáneamente
+            document.getElementById('precio-actual').innerText = '$' + datos.amount;
+            document.getElementById('historial').innerHTML +=
+                '🔥 ¡Nueva puja! El usuario ' + datos.newWinnerId + ' ofreció $' + datos.amount + '<br>';
+        });
+    });
+</script>
+</body>
+</html>
