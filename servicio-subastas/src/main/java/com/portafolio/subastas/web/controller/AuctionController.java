@@ -65,6 +65,14 @@ public class AuctionController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}/current-bid")
+    public ResponseEntity<Void> updateCurrentBid(
+            @PathVariable Long id,
+            @RequestBody UpdateBidRequest request) {
+        updateAuctionBidUseCase.execute(id, request.winnerId(), request.amount());
+        return ResponseEntity.noContent().build();
+    }
+
     private AuctionResponse mapToResponse(Auction auction) {
         return new AuctionResponse(
                 auction.getId(),
@@ -77,13 +85,5 @@ public class AuctionController {
                 auction.getStatus(),
                 auction.getWinnerId()
         );
-    }
-
-    @PatchMapping("/{id}/current-bid")
-    public ResponseEntity<Void> updateCurrentBid(
-            @PathVariable Long id,
-            @RequestBody UpdateBidRequest request) {
-        updateAuctionBidUseCase.execute(id, request.winnerId(), request.amount());
-        return ResponseEntity.noContent().build();
     }
 }
