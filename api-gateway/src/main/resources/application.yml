@@ -1,0 +1,38 @@
+server:
+  port: 9000
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 3600000
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: route-subastas
+          uri: http://localhost:8080
+          predicates:
+            - Path=/auctions/**, /products/**
+          filters:
+            - JwtAuthenticationFilter
+
+        - id: route-wallet
+          uri: http://localhost:8081
+          predicates:
+            - Path=/wallets/**, /transactions/**
+          filters:
+            - JwtAuthenticationFilter
+
+        - id: route-bidding
+          uri: http://localhost:8082
+          predicates:
+            - Path=/bids/**
+          filters:
+            - JwtAuthenticationFilter
+
+        - id: route-bidding-ws
+          uri: ws://localhost:8082
+          predicates:
+            - Path=/ws-bidding/**
