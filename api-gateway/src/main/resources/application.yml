@@ -8,6 +8,10 @@ jwt:
 spring:
   application:
     name: api-gateway
+  data:
+    redis:
+      host: localhost
+      port: 6379
   cloud:
     gateway:
       routes:
@@ -17,6 +21,11 @@ spring:
             - Path=/auctions/**, /products/**
           filters:
             - JwtAuthenticationFilter
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@userKeyResolver}"
 
         - id: route-wallet
           uri: http://localhost:8081
@@ -24,6 +33,11 @@ spring:
             - Path=/wallets/**, /transactions/**
           filters:
             - JwtAuthenticationFilter
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 3
+                redis-rate-limiter.burstCapacity: 5
+                key-resolver: "#{@userKeyResolver}"
 
         - id: route-bidding
           uri: http://localhost:8082
@@ -31,6 +45,11 @@ spring:
             - Path=/bids/**
           filters:
             - JwtAuthenticationFilter
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@userKeyResolver}"
 
         - id: route-bidding-ws
           uri: ws://localhost:8082
