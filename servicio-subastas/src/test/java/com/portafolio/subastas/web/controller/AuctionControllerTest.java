@@ -52,7 +52,7 @@ class AuctionControllerTest {
                 new BigDecimal("100.00"), command.startTime(), command.endTime(),
                 AuctionStatus.DRAFT, null);
 
-        when(createAuctionUseCase.execute(any(CreateAuctionCommand.class))).thenReturn(mockAuction);
+        when(createAuctionUseCase.execute(any(CreateAuctionCommand.class), eq("2"))).thenReturn(mockAuction);
 
         mockMvc.perform(post("/auctions")
                         .header("X-User-Id", "2")
@@ -72,7 +72,7 @@ class AuctionControllerTest {
                 LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2)
         );
 
-        when(createAuctionUseCase.execute(any(CreateAuctionCommand.class)))
+        when(createAuctionUseCase.execute(any(CreateAuctionCommand.class), eq("2")))
                 .thenThrow(new InvalidAuctionStateException("El producto ya se encuentra en una subasta DRAFT o ACTIVE."));
 
         mockMvc.perform(post("/auctions")
@@ -116,8 +116,7 @@ class AuctionControllerTest {
     @Test
     @DisplayName("PATCH /auctions/{id}/cancel - Debería retornar 204 No Content")
     void shouldCancelAuction() throws Exception {
-
-        doNothing().when(cancelAuctionUseCase).execute(1L);
+        doNothing().when(cancelAuctionUseCase).execute(1L, "2");
 
         mockMvc.perform(patch("/auctions/1/cancel")
                         .header("X-User-Id", "2"))

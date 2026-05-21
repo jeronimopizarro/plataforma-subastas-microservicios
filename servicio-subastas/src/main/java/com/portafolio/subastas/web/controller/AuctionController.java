@@ -40,11 +40,13 @@ public class AuctionController {
     }
 
     @PostMapping
-    public ResponseEntity<AuctionResponse> createAuction(@RequestBody CreateAuctionCommand command) {
-        Auction savedAuction = createAuctionUseCase.execute(command);
+    public ResponseEntity<AuctionResponse> createAuction(
+            @RequestBody CreateAuctionCommand command,
+            @RequestHeader("X-User-Id") String authUserId) {
 
+        // Pasamos el authUserId al caso de uso
+        Auction savedAuction = createAuctionUseCase.execute(command, authUserId);
         AuctionResponse response = auctionResponseMapper.toResponse(savedAuction);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -66,8 +68,11 @@ public class AuctionController {
     }
 
     @PatchMapping("/{id}/cancel")
-    public ResponseEntity<Void> cancelAuction(@PathVariable Long id) {
-        cancelAuctionUseCase.execute(id);
+    public ResponseEntity<Void> cancelAuction(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") String authUserId) {
+
+        cancelAuctionUseCase.execute(id, authUserId);
         return ResponseEntity.noContent().build();
     }
 
