@@ -4,6 +4,7 @@ import com.portafolio.subastas.application.dto.CreateProductCommand;
 import com.portafolio.subastas.domain.entity.Product;
 import com.portafolio.subastas.domain.repository.ProductRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CreateProductUseCase {
@@ -14,19 +15,21 @@ public class CreateProductUseCase {
         this.productRepository = productRepository;
     }
 
-    public Product execute(CreateProductCommand command) {
-        Product newProduct = buildProductFrom(command);
+    @Transactional
+    public Product execute(CreateProductCommand command, String authUserId) {
+        Long sellerId = Long.parseLong(authUserId);
+        Product product = createProduct(command, sellerId);
 
-        return productRepository.save(newProduct);
+        return productRepository.save(product);
     }
 
-    private Product buildProductFrom(CreateProductCommand command) {
+    private Product createProduct(CreateProductCommand command, Long sellerId) {
         return Product.createNew(
                 command.title(),
                 command.description(),
                 command.condition(),
                 command.imageUrl(),
-                command.sellerId()
+                sellerId
         );
     }
 }

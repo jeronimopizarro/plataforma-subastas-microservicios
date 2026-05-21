@@ -47,15 +47,21 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                 return exchange.getResponse().setComplete();
             }
 
-            // 5. [Nivel Arquitectura Pro]: Extraemos el ID del usuario del token
-            // y lo inyectamos en una nueva cabecera para que el microservicio de destino sepa quién es.
+            // 5. Extraemos el ID del usuario del token
             String userId = jwtUtils.getUserIdFromJwtToken(token);
-            exchange.getRequest().mutate()
+
+            // ¡CORRECCIÓN!: Guardamos la petición mutada en una variable
+            org.springframework.http.server.reactive.ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                     .header("X-User-Id", userId)
                     .build();
 
-            // 6. ¡Todo en orden! Le decimos a la cadena que deje pasar la petición
-            return chain.filter(exchange);
+            // Empaquetamos la petición mutada en un nuevo Exchange
+            org.springframework.web.server.ServerWebExchange mutatedExchange = exchange.mutate()
+                    .request(mutatedRequest)
+                    .build();
+
+            // 6. Pasamos el Exchange NUEVO a la cadena
+            return chain.filter(mutatedExchange);
         };
     }
 }

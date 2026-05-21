@@ -6,6 +6,7 @@ import com.portafolio.bidding.domain.entity.Bid;
 import com.portafolio.bidding.domain.repository.BidRepository;
 import com.portafolio.bidding.infrastructure.client.AuctionFeignClient;
 import com.portafolio.bidding.infrastructure.client.WalletFeignClient;
+
 import com.portafolio.bidding.infrastructure.client.dto.AuctionResponse;
 import com.portafolio.bidding.infrastructure.client.dto.TransactionRequest;
 import com.portafolio.bidding.infrastructure.client.dto.UpdateBidRequest;
@@ -45,14 +46,14 @@ class PlaceBidUseCaseTest {
         when(auctionClient.getAuctionById(1L)).thenReturn(mockAuction);
         when(bidRepository.save(any(Bid.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        Bid result = placeBidUseCase.execute(command);
+        // PASAMOS "2" PORQUE EL BIDDER ID ES 2L
+        Bid result = placeBidUseCase.execute(command, "2");
 
         assertNotNull(result);
         assertEquals(new BigDecimal("500.00"), result.getAmount());
 
         verify(walletClient, times(1)).holdFunds(eq(2L), any(TransactionRequest.class));
         verify(auctionClient, times(1)).updateCurrentBid(eq(1L), any(UpdateBidRequest.class));
-        // Verificamos que NO se devolvieron fondos a nadie (porque no había ganador previo)
         verify(walletClient, never()).releaseFunds(anyLong(), any(TransactionRequest.class));
         verify(bidEventPublisher, times(1)).publishNewBid(eq(1L), eq(2L), eq(new BigDecimal("500.00")));
     }
@@ -63,16 +64,16 @@ class PlaceBidUseCaseTest {
         PlaceBidCommand command = new PlaceBidCommand(1L, 3L, new BigDecimal("1000.00"));
         AuctionResponse mockAuction = new AuctionResponse(1L, 10L, 5L, new BigDecimal("100.00"),
                 new BigDecimal("500.00"), LocalDateTime.now().minusHours(1),
-                LocalDateTime.now().plusDays(1), "ACTIVE", 2L); // 2L es el ganador previo
+                LocalDateTime.now().plusDays(1), "ACTIVE", 2L);
 
         when(auctionClient.getAuctionById(1L)).thenReturn(mockAuction);
         when(bidRepository.save(any(Bid.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        placeBidUseCase.execute(command);
+        // PASAMOS "3" PORQUE EL BIDDER ID ES 3L
+        placeBidUseCase.execute(command, "3");
 
         verify(walletClient, times(1)).holdFunds(eq(3L), any(TransactionRequest.class));
         verify(auctionClient, times(1)).updateCurrentBid(eq(1L), any(UpdateBidRequest.class));
-        // Verificamos si se le devolvieron los fondos al usuario 2L
         verify(walletClient, times(1)).releaseFunds(eq(2L), any(TransactionRequest.class));
     }
 
@@ -85,16 +86,34 @@ class PlaceBidUseCaseTest {
                 LocalDateTime.now().plusDays(1), "ACTIVE", null);
 
         when(auctionClient.getAuctionById(1L)).thenReturn(mockAuction);
-        // Simulamos caída de red en el catálogo
         doThrow(new RuntimeException("Error de conexión")).when(auctionClient).updateCurrentBid(eq(1L), any());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> placeBidUseCase.execute(command));
+        // PASAMOS "2"
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> placeBidUseCase.execute(command, "2"));
         assertTrue(exception.getMessage().contains("Se devolvieron los fondos"));
 
-        // Verificamos el flujo de compensación: Se retuvo y luego se devolvió al mismo usuario (2L)
         verify(walletClient, times(1)).holdFunds(eq(2L), any(TransactionRequest.class));
         verify(walletClient, times(1)).releaseFunds(eq(2L), any(TransactionRequest.class));
         verify(bidRepository, never()).save(any());
         verify(bidEventPublisher, never()).publishNewBid(anyLong(), anyLong(), any(BigDecimal.class));
+    }
+
+    // ¡NUEVO TEST DE SEGURIDAD!
+    @Test
+    @DisplayName("Debería lanzar excepción si el usuario intenta pujar a nombre de otro")
+    void shouldThrowExceptionWhenBiddingForAnotherUser() {
+        // Intenta pujar a nombre del usuario 2L
+        PlaceBidCommand command = new PlaceBidCommand(1L, 2L, new BigDecimal("500.00"));
+
+        // Pero el token le pertenece al usuario "99"
+        String hackerAuthId = "99";
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> placeBidUseCase.execute(command, hackerAuthId));
+
+        assertTrue(exception.getMessage().contains("No puedes realizar una puja a nombre de otro usuario"));
+
+        // Verificamos que nada más se haya ejecutado
+        verify(auctionClient, never()).getAuctionById(anyLong());
+        verify(walletClient, never()).holdFunds(anyLong(), any());
     }
 }

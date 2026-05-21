@@ -30,7 +30,10 @@ public class PlaceBidUseCase {
         this.bidEventPublisher = bidEventPublisher;
     }
 
-    public Bid execute(PlaceBidCommand command) {
+    public Bid execute(PlaceBidCommand command, String authUserId) {
+
+        validateSameOwner(command, authUserId);
+
         AuctionResponse auction = fetchAndValidateAuction(command.auctionId(), command.amount());
 
         holdFundsForNewBidder(command.bidderId(), command.amount(), command.auctionId());
@@ -49,6 +52,12 @@ public class PlaceBidUseCase {
         } catch (Exception e) {
             executeRollback(command.bidderId(), command.amount(), command.auctionId());
             throw new RuntimeException("Error al registrar la puja en el catálogo. Se devolvieron los fondos.", e);
+        }
+    }
+
+    private void validateSameOwner(PlaceBidCommand command, String authUserId) {
+        if (!command.bidderId().toString().equals(authUserId)) {
+            throw new RuntimeException("Error 403: No puedes realizar una puja a nombre de otro usuario.");
         }
     }
 

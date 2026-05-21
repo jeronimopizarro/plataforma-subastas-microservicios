@@ -6,6 +6,7 @@ import com.portafolio.subastas.domain.entity.Auction;
 import com.portafolio.subastas.domain.enums.AuctionStatus;
 import com.portafolio.subastas.web.dto.AuctionResponse;
 import com.portafolio.subastas.web.dto.UpdateBidRequest;
+import com.portafolio.subastas.web.mapper.AuctionResponseMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,39 +23,44 @@ public class AuctionController {
     private final ListAuctionsByStatusUseCase listAuctionsByStatusUseCase;
     private final CancelAuctionUseCase cancelAuctionUseCase;
     private final UpdateAuctionBidUseCase updateAuctionBidUseCase;
+    private final AuctionResponseMapper auctionResponseMapper;
 
     public AuctionController(CreateAuctionUseCase createAuctionUseCase,
                              FindAuctionByIdUseCase findAuctionByIdUseCase,
                              ListAuctionsByStatusUseCase listAuctionsByStatusUseCase,
-                             CancelAuctionUseCase cancelAuctionUseCase, UpdateAuctionBidUseCase updateAuctionBidUseCase) {
+                             CancelAuctionUseCase cancelAuctionUseCase,
+                             UpdateAuctionBidUseCase updateAuctionBidUseCase,
+                             AuctionResponseMapper auctionResponseMapper) {
         this.createAuctionUseCase = createAuctionUseCase;
         this.findAuctionByIdUseCase = findAuctionByIdUseCase;
         this.listAuctionsByStatusUseCase = listAuctionsByStatusUseCase;
         this.cancelAuctionUseCase = cancelAuctionUseCase;
         this.updateAuctionBidUseCase = updateAuctionBidUseCase;
+        this.auctionResponseMapper = auctionResponseMapper;
     }
 
     @PostMapping
     public ResponseEntity<AuctionResponse> createAuction(@RequestBody CreateAuctionCommand command) {
         Auction savedAuction = createAuctionUseCase.execute(command);
-        AuctionResponse response = mapToResponse(savedAuction);
+
+        AuctionResponse response = auctionResponseMapper.toResponse(savedAuction);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<AuctionResponse> getAuctionById(@PathVariable Long id) {
         Auction auction = findAuctionByIdUseCase.execute(id);
-        return ResponseEntity.ok(mapToResponse(auction));
+        return ResponseEntity.ok(auctionResponseMapper.toResponse(auction));
     }
 
-    // Si el usuario no manda el parámetro, por defecto buscamos las ACTIVE.
     @GetMapping
     public ResponseEntity<List<AuctionResponse>> getAuctionsByStatus(
             @RequestParam(defaultValue = "ACTIVE") AuctionStatus status) {
 
         List<AuctionResponse> auctions = listAuctionsByStatusUseCase.execute(status)
                 .stream()
-                .map(this::mapToResponse)
+                .map(auctionResponseMapper::toResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(auctions);
     }
@@ -71,19 +77,5 @@ public class AuctionController {
             @RequestBody UpdateBidRequest request) {
         updateAuctionBidUseCase.execute(id, request.winnerId(), request.amount());
         return ResponseEntity.noContent().build();
-    }
-
-    private AuctionResponse mapToResponse(Auction auction) {
-        return new AuctionResponse(
-                auction.getId(),
-                auction.getProductId(),
-                auction.getSellerId(),
-                auction.getStartingPrice(),
-                auction.getCurrentHighestBid(),
-                auction.getStartTime(),
-                auction.getEndTime(),
-                auction.getStatus(),
-                auction.getWinnerId()
-        );
     }
 }

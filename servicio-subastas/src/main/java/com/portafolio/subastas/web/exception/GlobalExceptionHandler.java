@@ -2,6 +2,7 @@ package com.portafolio.subastas.web.exception;
 
 import com.portafolio.subastas.domain.exception.DomainException;
 import com.portafolio.subastas.domain.exception.ErrorCode;
+import com.portafolio.subastas.domain.exception.UnauthorizedAccessException;
 import com.portafolio.subastas.web.dto.ApiErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +40,17 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(UnauthorizedAccessException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnauthorizedAccessException(UnauthorizedAccessException ex) {
+        ApiErrorResponse response = new ApiErrorResponse(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN.getReasonPhrase(),
+                HttpStatus.FORBIDDEN.value(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     private HttpStatus mapErrorCodeToHttpStatus(ErrorCode errorCode) {

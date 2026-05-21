@@ -3,6 +3,7 @@ package com.portafolio.subastas.application.usecase;
 import com.portafolio.subastas.application.dto.CreateProductCommand;
 import com.portafolio.subastas.domain.entity.Product;
 import com.portafolio.subastas.domain.repository.ProductRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,6 +25,7 @@ class CreateProductUseCaseTest {
     private CreateProductUseCase createProductUseCase;
 
     @Test
+    @DisplayName("Debería crear y guardar el producto exitosamente vinculándolo al usuario autenticado")
     void shouldCreateAndSaveProductSuccessfully() {
         // 1. Arrange
         CreateProductCommand command = new CreateProductCommand(
@@ -33,6 +35,8 @@ class CreateProductUseCaseTest {
                 "http://imagen.com/silla.jpg",
                 10L
         );
+
+        String authUserId = "10";
 
         // Simulamos que al guardar, la base de datos nos devuelve el mismo producto pero ya con un ID generado (1L)
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> {
@@ -49,10 +53,8 @@ class CreateProductUseCaseTest {
             );
         });
 
-        // 2. Act
-        Product result = createProductUseCase.execute(command);
+        Product result = createProductUseCase.execute(command, authUserId);
 
-        // 3. Assert
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals("Silla Gamer", result.getTitle());
