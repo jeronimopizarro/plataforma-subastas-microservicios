@@ -6,6 +6,8 @@ import com.portafolio.bidding.domain.entity.Bid;
 import com.portafolio.bidding.web.dto.BidRequest;
 import com.portafolio.bidding.web.dto.BidResponse;
 import com.portafolio.bidding.web.mapper.BidResponseMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
