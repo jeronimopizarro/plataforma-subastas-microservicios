@@ -1,0 +1,28 @@
+:root {
+  --color-light: #f9dbbd;       /* Fondo principal o tarjetas claras */
+  --color-accent: #ffa5ab;      /* Detalles, hovers o botones secundarios */
+  --color-primary: #da627d;     /* Color principal de la marca, botones primarios */
+  --color-secondary: #a53860;   /* Cabeceras, bordes o elementos de énfasis */
+  --color-dark: #450920;        /* Textos principales, footer o fondos oscuros */
+
+  /* Variables base del sistema */
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  color-scheme: light dark;
+  color: var(--color-dark);
+  background-color: var(--color-light);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* Clases de utilidad rápida para usar en tus componentes */
+.bg-primary { background-color: var(--color-primary); color: var(--color-light); }
+.bg-secondary { background-color: var(--color-secondary); color: var(--color-light); }
+.bg-dark { background-color: var(--color-dark); color: var(--color-light); }
+.text-primary { color: var(--color-primary); }
+.text-dark { color: var(--color-dark); }
