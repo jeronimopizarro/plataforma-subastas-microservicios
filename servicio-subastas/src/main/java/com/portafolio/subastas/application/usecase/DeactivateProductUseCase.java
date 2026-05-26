@@ -4,7 +4,6 @@ import com.portafolio.subastas.domain.entity.Product;
 import com.portafolio.subastas.domain.exception.ProductNotFoundException;
 import com.portafolio.subastas.domain.exception.UnauthorizedAccessException;
 import com.portafolio.subastas.domain.repository.ProductRepository;
-import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +32,7 @@ public class DeactivateProductUseCase {
         }
     }
 
-    private @NonNull Product findProductById(Long productId) {
+    private Product findProductById(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
     }

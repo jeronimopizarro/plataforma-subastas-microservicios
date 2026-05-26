@@ -1,6 +1,28 @@
 server:
   port: 9000
 
+# ===================================================================
+# CONFIGURACIÓN DE SEGURIDAD (JWT)
+# ===================================================================
+jwt:
+  # Lee la clave desde la variable de entorno de tu PC/Servidor
+  secret: ${JWT_SECRET}
+  expiration: 900000
+  refresh-expiration: 604800000
+
+# 1. Configuración de Swagger: El navegador solo verá rutas limpias de negocio
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    urls:
+      - name: 🛒 Servicio Subastas
+        url: /docs/subastas
+      - name: 💳 Servicio Wallet
+        url: /docs/wallet
+      - name: 🔨 Servicio Bidding
+        url: /docs/bidding
+
 spring:
   application:
     name: api-gateway
@@ -11,6 +33,34 @@ spring:
   cloud:
     gateway:
       routes:
+        # ===================================================================
+        # ENMASCARAMIENTO DE DOCUMENTACIÓN (Sin "v3" ni nombres internos)
+        # ===================================================================
+        - id: docs-subastas
+          uri: http://localhost:8080
+          predicates:
+            - Path=/docs/subastas
+          filters:
+            # Reemplaza la ruta externa completa por la ruta interna que el microservicio entiende
+            - SetPath=/v3/api-docs
+
+        - id: docs-wallet
+          uri: http://localhost:8081
+          predicates:
+            - Path=/docs/wallet
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: docs-bidding
+          uri: http://localhost:8082
+          predicates:
+            - Path=/docs/bidding
+          filters:
+            - SetPath=/v3/api-docs
+
+        # ===================================================================
+        # RUTAS DE NEGOCIO (Tus rutas funcionales)
+        # ===================================================================
         - id: route-subastas
           uri: http://localhost:8080
           predicates:
