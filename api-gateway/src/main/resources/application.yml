@@ -5,12 +5,10 @@ server:
 # CONFIGURACIÓN DE SEGURIDAD (JWT)
 # ===================================================================
 jwt:
-  # Lee la clave desde la variable de entorno de tu PC/Servidor
   secret: ${JWT_SECRET}
   expiration: 900000
   refresh-expiration: 604800000
 
-# 1. Configuración de Swagger: El navegador solo verá rutas limpias de negocio
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -28,41 +26,34 @@ spring:
     name: api-gateway
   data:
     redis:
-      host: localhost
+      host: redis
       port: 6379
   cloud:
     gateway:
       routes:
-        # ===================================================================
-        # ENMASCARAMIENTO DE DOCUMENTACIÓN (Sin "v3" ni nombres internos)
-        # ===================================================================
         - id: docs-subastas
-          uri: http://localhost:8080
+          uri: http://servicio-subastas:8080
           predicates:
             - Path=/docs/subastas
           filters:
-            # Reemplaza la ruta externa completa por la ruta interna que el microservicio entiende
             - SetPath=/v3/api-docs
 
         - id: docs-wallet
-          uri: http://localhost:8081
+          uri: http://servicio-wallet:8081
           predicates:
             - Path=/docs/wallet
           filters:
             - SetPath=/v3/api-docs
 
         - id: docs-bidding
-          uri: http://localhost:8082
+          uri: http://servicio-bidding:8082
           predicates:
             - Path=/docs/bidding
           filters:
             - SetPath=/v3/api-docs
 
-        # ===================================================================
-        # RUTAS DE NEGOCIO (Tus rutas funcionales)
-        # ===================================================================
         - id: route-subastas
-          uri: http://localhost:8080
+          uri: http://servicio-subastas:8080
           predicates:
             - Path=/auctions/**, /products/**
           filters:
@@ -74,7 +65,7 @@ spring:
                 key-resolver: "#{@userKeyResolver}"
 
         - id: route-wallet
-          uri: http://localhost:8081
+          uri: http://servicio-wallet:8081
           predicates:
             - Path=/wallets/**, /transactions/**
           filters:
@@ -86,7 +77,7 @@ spring:
                 key-resolver: "#{@userKeyResolver}"
 
         - id: route-bidding
-          uri: http://localhost:8082
+          uri: http://servicio-bidding:8082
           predicates:
             - Path=/bids/**
           filters:
@@ -98,6 +89,6 @@ spring:
                 key-resolver: "#{@userKeyResolver}"
 
         - id: route-bidding-ws
-          uri: ws://localhost:8082
+          uri: ws://servicio-bidding:8082
           predicates:
             - Path=/ws-bidding/**

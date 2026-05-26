@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
 // Le indicamos el nombre del servicio y la URL base donde vive el Catálogo
-@FeignClient(name = "servicio-subastas", url = "http://localhost:8080/auctions")
+@FeignClient(name = "servicio-subastas", url = "http://servicio-subastas:8080/auctions")
 public interface AuctionFeignClient {
 
     // Simula una petición GET a http://localhost:8080/auctions/{id}

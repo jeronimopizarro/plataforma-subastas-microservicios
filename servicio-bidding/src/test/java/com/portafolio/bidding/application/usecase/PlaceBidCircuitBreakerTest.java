@@ -16,7 +16,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.datasource.url=jdbc:mysql://localhost:3307/bidding_db?serverTimezone=UTC&createDatabaseIfNotExist=true"
+})
 class PlaceBidCircuitBreakerTest {
 
     @Autowired

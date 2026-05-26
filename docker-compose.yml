@@ -1,8 +1,57 @@
 version: '3.8'
+
 services:
+  # Base de Datos
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_DATABASE: subastas_db
+      MYSQL_ROOT_PASSWORD: password123
+    ports:
+      - "3307:3306"
+
+  # Caché
   redis:
     image: redis:7-alpine
-    container_name: subastas-redis
+    container_name: redis-cache
     ports:
       - "6379:6379"
-    restart: always
+
+  # Microservicios
+  servicio-subastas:
+    build: ./servicio-subastas
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    restart: on-failure
+
+  servicio-wallet:
+    build: ./servicio-wallet
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mysql
+    restart: on-failure
+
+  servicio-bidding:
+    build: ./servicio-bidding
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mysql
+    restart: on-failure
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "9000:9000"
+    environment:
+      - JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    depends_on:
+      - servicio-subastas
+      - servicio-wallet
+      - servicio-bidding
+      - redis
+    restart: on-failure

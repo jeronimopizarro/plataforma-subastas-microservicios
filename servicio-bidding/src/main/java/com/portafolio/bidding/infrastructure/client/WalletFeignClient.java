@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "servicio-wallet", url = "http://localhost:8081/wallets")
+@FeignClient(name = "servicio-wallet", url = "http://servicio-wallet:8081/wallets")
 public interface WalletFeignClient {
 
     // Simula POST a http://localhost:8081/wallets/{userId}/hold
