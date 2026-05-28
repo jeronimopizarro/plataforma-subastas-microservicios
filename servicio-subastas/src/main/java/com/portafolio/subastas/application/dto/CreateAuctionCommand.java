@@ -5,9 +5,7 @@ import java.time.LocalDateTime;
 
 public record CreateAuctionCommand(
         Long productId,
-        Long sellerId,
         BigDecimal startingPrice,
         LocalDateTime startTime,
         LocalDateTime endTime
-) {
-}
+) {}

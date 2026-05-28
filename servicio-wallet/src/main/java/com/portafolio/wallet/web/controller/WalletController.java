@@ -33,26 +33,23 @@ public class WalletController {
         this.walletResponseMapper = walletResponseMapper;
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<WalletResponse> getWalletByUserId(
-            @PathVariable Long userId,
+    @GetMapping("/me")
+    public ResponseEntity<WalletResponse> getMyWallet(
             @RequestHeader("X-User-Id") String authUserId) {
 
+        Long userId = Long.valueOf(authUserId);
         Wallet wallet = findWalletByUserIdUseCase.execute(userId, authUserId);
-
-        WalletResponse response = walletResponseMapper.toResponse(wallet);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(walletResponseMapper.toResponse(wallet));
     }
 
-    @PostMapping("/{userId}/deposit")
+    @PostMapping("/me/deposit")
     public ResponseEntity<Void> addFunds(
-            @PathVariable Long userId,
             @RequestBody TransactionRequest request,
             @RequestHeader("X-User-Id") String authUserId) {
 
+        Long userId = Long.valueOf(authUserId);
         WalletTransactionCommand command = new WalletTransactionCommand(userId, request.amount(), request.reference());
-        addFundsUseCase.execute(command, authUserId); // Pasamos el validador
+        addFundsUseCase.execute(command, authUserId);
         return ResponseEntity.ok().build();
     }
 

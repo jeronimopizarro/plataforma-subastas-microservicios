@@ -25,14 +25,18 @@ public class CreateAuctionUseCase {
 
     @Transactional
     public Auction execute(CreateAuctionCommand command, String authUserId) {
-        // 1. Obtener y validar el producto (existencia, estado activo y propiedad)
         Product product = validateAndGetProduct(command.productId(), authUserId);
 
-        // 2. Validar que no haya subastas activas
         validateNoActiveAuctionsForProduct(command.productId());
 
-        // 3. Crear subasta garantizando que el sellerId es el dueño real del producto
-        Auction newAuction = buildAuctionFrom(command, product.getSellerId());
+        Auction newAuction = Auction.createNew(
+                command.productId(),
+                product.getSellerId(),
+                command.startingPrice(),
+                command.startTime(),
+                command.endTime()
+        );
+
         return auctionRepository.save(newAuction);
     }
 
@@ -41,11 +45,11 @@ public class CreateAuctionUseCase {
                 .orElseThrow(() -> new ProductNotFoundException(productId));
 
         if (!product.isActive()) {
-            throw new InvalidProductException("El producto se encuentra inactivo y no puede ser subastado.");
+            throw new InvalidProductException("El producto se encuentra inactivo.");
         }
 
-        if (!product.getSellerId().toString().equals(authUserId)) {
-            throw new UnauthorizedAccessException("Error 403: No puedes crear una subasta para un producto que no te pertenece.");
+        if (!product.getSellerId().equals(Long.parseLong(authUserId))) {
+            throw new UnauthorizedAccessException("Acceso denegado: No eres el dueño de este producto.");
         }
 
         return product;
@@ -57,13 +61,4 @@ public class CreateAuctionUseCase {
         }
     }
 
-    private Auction buildAuctionFrom(CreateAuctionCommand command, Long safeSellerId) {
-        return Auction.createNew(
-                command.productId(),
-                safeSellerId, // Inyectamos el ID validado directamente
-                command.startingPrice(),
-                command.startTime(),
-                command.endTime()
-        );
-    }
 }

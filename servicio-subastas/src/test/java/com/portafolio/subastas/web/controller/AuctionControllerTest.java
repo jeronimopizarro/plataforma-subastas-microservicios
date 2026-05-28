@@ -44,7 +44,7 @@ class AuctionControllerTest {
     @DisplayName("POST /auctions - Debería retornar 201 Created")
     void shouldCreateAuction() throws Exception {
         CreateAuctionCommand command = new CreateAuctionCommand(
-                1L, 2L, new BigDecimal("100.00"),
+                1L, new BigDecimal("100.00"),
                 LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2)
         );
 
@@ -68,7 +68,7 @@ class AuctionControllerTest {
     @DisplayName("POST /auctions - Debería retornar 409 Conflict si el producto ya está en subasta")
     void shouldReturn409WhenProductAlreadyInAuction() throws Exception {
         CreateAuctionCommand command = new CreateAuctionCommand(
-                1L, 2L, new BigDecimal("100.00"),
+                1L, new BigDecimal("100.00"),
                 LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2)
         );
 

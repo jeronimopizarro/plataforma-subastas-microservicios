@@ -42,16 +42,14 @@ class ProductControllerTest {
     @DisplayName("POST /products - Debería retornar 201 Created y el producto")
     void shouldCreateProduct() throws Exception {
         CreateProductCommand command = new CreateProductCommand(
-                "Silla Gamer", "Silla ergonómica negra", "NUEVO", "http://img.com/silla.jpg", 10L
+                "Silla Gamer", "Silla ergonómica negra", "NUEVO", "http://img.com/silla.jpg"
         );
 
-        // Simulamos el producto guardado (con ID asignado)
         Product mockProduct = Product.restore(
                 1L, command.title(), command.description(), command.condition(),
-                command.imageUrl(), command.sellerId(), true
+                command.imageUrl(), 10L, true
         );
 
-        // espere el comando y el ID del usuario "10"
         when(createProductUseCase.execute(any(CreateProductCommand.class), eq("10"))).thenReturn(mockProduct);
 
         mockMvc.perform(post("/products")

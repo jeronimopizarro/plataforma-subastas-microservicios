@@ -36,16 +36,14 @@ class BiddingControllerTest {
     @Test
     @DisplayName("POST /bids - Debería retornar 201 Created al procesar la puja")
     void shouldPlaceBidAndReturn201() throws Exception {
-        BidRequest request = new BidRequest(1L, 2L, new BigDecimal("500.00"));
+        BidRequest request = new BidRequest(1L, new BigDecimal("500.00"));
 
-        // Simulamos la puja generada internamente
         Bid mockBid = Bid.restore(100L, 1L, 2L, new BigDecimal("500.00"), java.time.LocalDateTime.now());
 
-        // 2. Le pasamos el parámetro de seguridad (el ID "2" como String)
         when(placeBidUseCase.execute(any(PlaceBidCommand.class), eq("2"))).thenReturn(mockBid);
 
         mockMvc.perform(post("/bids")
-                        .header("X-User-Id", "2") // <-- 3. Inyectamos la cabecera
+                        .header("X-User-Id", "2")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())

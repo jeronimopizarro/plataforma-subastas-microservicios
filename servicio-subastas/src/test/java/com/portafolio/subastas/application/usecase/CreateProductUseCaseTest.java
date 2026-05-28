@@ -32,8 +32,7 @@ class CreateProductUseCaseTest {
                 "Silla Gamer",
                 "Silla ergonómica negra",
                 "NUEVO",
-                "http://imagen.com/silla.jpg",
-                10L
+                "http://imagen.com/silla.jpg"
         );
 
         String authUserId = "10";

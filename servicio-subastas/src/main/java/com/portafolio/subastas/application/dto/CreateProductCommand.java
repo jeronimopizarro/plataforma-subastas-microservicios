@@ -4,7 +4,5 @@ public record CreateProductCommand(
         String title,
         String description,
         String condition,
-        String imageUrl,
-        Long sellerId
-) {
-}
+        String imageUrl
+) {}

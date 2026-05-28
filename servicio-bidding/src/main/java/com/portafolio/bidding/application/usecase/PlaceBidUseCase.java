@@ -44,7 +44,7 @@ public class PlaceBidUseCase {
 
         validateSameOwner(command, authUserId);
 
-        AuctionResponse auction = fetchAndValidateAuction(command.auctionId(), command.amount());
+        AuctionResponse auction = fetchAndValidateAuction(command.auctionId(), command.amount(), command.bidderId());
 
         holdFundsForNewBidder(command.bidderId(), command.amount(), command.auctionId());
 
@@ -75,8 +75,12 @@ public class PlaceBidUseCase {
     }
 
 
-    private AuctionResponse fetchAndValidateAuction(Long auctionId, BigDecimal amount) {
+    private AuctionResponse fetchAndValidateAuction(Long auctionId, BigDecimal amount, Long bidderId) {
         AuctionResponse auction = auctionClient.getAuctionById(auctionId);
+
+        if (auction.sellerId() != null && auction.sellerId().equals(bidderId)) {
+            throw new DomainException(ErrorCode.INVALID_ARGUMENT, "Operación denegada: No puedes pujar en tu propia subasta.");
+        }
 
         if (!"ACTIVE".equals(auction.status())) {
             throw new DomainException(ErrorCode.INVALID_ARGUMENT, "La subasta no está activa.");

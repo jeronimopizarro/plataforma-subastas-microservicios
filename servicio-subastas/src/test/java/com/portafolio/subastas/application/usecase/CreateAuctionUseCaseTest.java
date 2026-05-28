@@ -36,7 +36,7 @@ class CreateAuctionUseCaseTest {
         String authUserId = "2"; // El usuario dueño del producto
 
         CreateAuctionCommand command = new CreateAuctionCommand(
-                productId, 2L, new BigDecimal("100"),
+                productId,  new BigDecimal("100"),
                 LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2)
         );
 
@@ -62,7 +62,7 @@ class CreateAuctionUseCaseTest {
         String authUserId = "2";
 
         CreateAuctionCommand command = new CreateAuctionCommand(
-                productId, 2L, new BigDecimal("100"),
+                productId,  new BigDecimal("100"),
                 LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2)
         );
 
@@ -82,7 +82,7 @@ class CreateAuctionUseCaseTest {
         String hackerAuthUserId = "99"; // Usuario malintencionado
 
         CreateAuctionCommand command = new CreateAuctionCommand(
-                productId, 2L, new BigDecimal("100"),
+                productId,  new BigDecimal("100"),
                 LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2)
         );
 

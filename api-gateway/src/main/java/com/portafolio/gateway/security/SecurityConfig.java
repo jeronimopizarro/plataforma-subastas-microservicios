@@ -7,7 +7,7 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
-@EnableWebFluxSecurity // <--- Importante: Usamos la versión Reactiva de Security
+@EnableWebFluxSecurity
 public class SecurityConfig {
 
     @Bean

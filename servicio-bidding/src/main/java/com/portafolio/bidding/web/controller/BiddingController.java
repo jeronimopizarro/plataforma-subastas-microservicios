@@ -29,10 +29,12 @@ public class BiddingController {
             @RequestBody BidRequest request,
             @RequestHeader("X-User-Id") String authUserId) {
 
-        PlaceBidCommand command = new PlaceBidCommand(request.auctionId(), request.bidderId(), request.amount());
+        // Convertimos el ID seguro del Gateway a Long
+        Long secureBidderId = Long.valueOf(authUserId);
+
+        PlaceBidCommand command = new PlaceBidCommand(request.auctionId(), secureBidderId, request.amount());
 
         Bid savedBid = placeBidUseCase.execute(command, authUserId);
-
         BidResponse response = bidResponseMapper.toResponse(savedBid);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
