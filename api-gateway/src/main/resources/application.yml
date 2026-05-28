@@ -20,6 +20,8 @@ springdoc:
         url: /docs/wallet
       - name: 🔨 Servicio Bidding
         url: /docs/bidding
+      - name: 👤 Servicio Usuarios
+        url: /docs/usuarios
 
 spring:
   application:
@@ -49,6 +51,13 @@ spring:
           uri: http://servicio-bidding:8082
           predicates:
             - Path=/docs/bidding
+          filters:
+            - SetPath=/v3/api-docs
+
+        - id: docs-usuarios
+          uri: http://servicio-usuarios:8083
+          predicates:
+            - Path=/docs/usuarios
           filters:
             - SetPath=/v3/api-docs
 
@@ -86,6 +95,17 @@ spring:
               args:
                 redis-rate-limiter.replenishRate: 10
                 redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@userKeyResolver}"
+
+        - id: route-usuarios
+          uri: http://servicio-usuarios:8083
+          predicates:
+            - Path=/auth/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
                 key-resolver: "#{@userKeyResolver}"
 
         - id: route-bidding-ws

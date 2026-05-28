@@ -43,6 +43,16 @@ services:
       - mysql
     restart: on-failure
 
+  servicio-usuarios:
+    build: ./servicio-usuarios
+    ports:
+      - "8083:8083"
+    environment:
+      - JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    depends_on:
+      - mysql
+    restart: on-failure
+
   api-gateway:
     build: ./api-gateway
     ports:
@@ -50,6 +60,7 @@ services:
     environment:
       - JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
     depends_on:
+      - servicio-usuarios
       - servicio-subastas
       - servicio-wallet
       - servicio-bidding
