@@ -9,4 +9,6 @@ public interface BidRepository {
     Bid save(Bid bid);
 
     List<Bid> findByAuctionId(Long auctionId);
+
+    List<Bid> findByBidderId(Long bidderId);
 }

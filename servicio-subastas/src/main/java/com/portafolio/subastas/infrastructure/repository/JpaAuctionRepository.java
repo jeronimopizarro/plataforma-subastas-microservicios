@@ -20,4 +20,6 @@ public interface JpaAuctionRepository extends JpaRepository<AuctionEntity, Long>
                                                             LocalDateTime time);
 
     boolean existsByProductIdAndStatusIn(Long productId, Collection<AuctionStatus> statuses);
+
+    List<AuctionEntity> findByWinnerId(Long winnerId);
 }

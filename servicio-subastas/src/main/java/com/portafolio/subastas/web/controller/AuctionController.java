@@ -24,19 +24,21 @@ public class AuctionController {
     private final CancelAuctionUseCase cancelAuctionUseCase;
     private final UpdateAuctionBidUseCase updateAuctionBidUseCase;
     private final AuctionResponseMapper auctionResponseMapper;
+    private final FindWonAuctionsUseCase findWonAuctionsUseCase;
 
     public AuctionController(CreateAuctionUseCase createAuctionUseCase,
                              FindAuctionByIdUseCase findAuctionByIdUseCase,
                              ListAuctionsByStatusUseCase listAuctionsByStatusUseCase,
                              CancelAuctionUseCase cancelAuctionUseCase,
                              UpdateAuctionBidUseCase updateAuctionBidUseCase,
-                             AuctionResponseMapper auctionResponseMapper) {
+                             AuctionResponseMapper auctionResponseMapper, FindWonAuctionsUseCase findWonAuctionsUseCase) {
         this.createAuctionUseCase = createAuctionUseCase;
         this.findAuctionByIdUseCase = findAuctionByIdUseCase;
         this.listAuctionsByStatusUseCase = listAuctionsByStatusUseCase;
         this.cancelAuctionUseCase = cancelAuctionUseCase;
         this.updateAuctionBidUseCase = updateAuctionBidUseCase;
         this.auctionResponseMapper = auctionResponseMapper;
+        this.findWonAuctionsUseCase = findWonAuctionsUseCase;
     }
 
     @PostMapping
@@ -82,5 +84,16 @@ public class AuctionController {
             @RequestBody UpdateBidRequest request) {
         updateAuctionBidUseCase.execute(id, request.winnerId(), request.amount());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/won")
+    public ResponseEntity<List<AuctionResponse>> getWonAuctions(@RequestHeader("X-User-Id") String userId) {
+        List<Auction> wonAuctions = findWonAuctionsUseCase.execute(Long.valueOf(userId));
+
+        List<AuctionResponse> response = wonAuctions.stream()
+                .map(auctionResponseMapper::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(response);
     }
 }

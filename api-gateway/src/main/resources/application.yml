@@ -64,7 +64,7 @@ spring:
         - id: route-subastas
           uri: http://servicio-subastas:8080
           predicates:
-            - Path=/auctions, /auctions/{id}, /auctions/{id}/cancel, /products/**
+            - Path=/auctions/**, /products/**
           filters:
             - JwtAuthenticationFilter
             - name: RequestRateLimiter

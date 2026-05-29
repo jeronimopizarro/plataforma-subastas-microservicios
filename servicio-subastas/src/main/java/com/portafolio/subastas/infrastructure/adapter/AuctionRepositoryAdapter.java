@@ -68,4 +68,11 @@ public class AuctionRepositoryAdapter implements AuctionRepository {
                 List.of(AuctionStatus.DRAFT, AuctionStatus.ACTIVE)
         );
     }
+
+    @Override
+    public List<Auction> findByWinnerId(Long winnerId) {
+        return jpaRepository.findByWinnerId(winnerId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }

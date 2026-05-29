@@ -31,4 +31,11 @@ public class BidRepositoryAdapter implements BidRepository {
                 .map(BidMapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Bid> findByBidderId(Long bidderId) {
+        return jpaRepository.findByBidderId(bidderId).stream()
+                .map(BidMapper::toDomain)
+                .toList();
+    }
 }

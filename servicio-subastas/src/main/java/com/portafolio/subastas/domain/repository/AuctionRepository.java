@@ -20,4 +20,6 @@ public interface AuctionRepository {
     List<Auction> findAuctionsToFinish(LocalDateTime currentTime);
 
     boolean existsActiveAuctionForProduct(Long productId);
+
+    List<Auction> findByWinnerId(Long winnerId);
 }
