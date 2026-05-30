@@ -7,20 +7,19 @@ export const WalletPage = () => {
   const [amountToAdd, setAmountToAdd] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Como el login es un mock, usaremos el ID 1 para probar la lógica en base de datos
-  const currentUsername = localStorage.getItem('subastas_username') || '1';
-  const CURRENT_USER_ID = parseInt(currentUsername, 10);
+  // Ya no usamos mocks. Sacamos el ID real que guardó el auth.service al hacer login
+  const userIdFromStorage = localStorage.getItem('userId');
+  const CURRENT_USER_ID = userIdFromStorage ? parseInt(userIdFromStorage, 10) : 0;
 
   const loadWallet = async () => {
     try {
       setLoading(true);
-      const data = await walletService.getWallet(CURRENT_USER_ID);
+      // Ya no le pasamos el ID, el token hace la magia
+      const data = await walletService.getWallet();
       setWallet(data);
     } catch (err: any) {
-      // Si el backend tira 404 es porque el usuario es nuevo y no tiene billetera.
-      // Tu AddFundsUseCase la creará automáticamente cuando cargue saldo.
       if (err.response?.status === 404) {
-        setWallet({ id: 0, userId: CURRENT_USER_ID, balance: 0, heldFunds: 0 });
+        setWallet({ id: 0, userId: CURRENT_USER_ID, availableBalance: 0, heldFunds: 0 }); 
       } else {
         console.error("Error al cargar la billetera", err);
       }
@@ -39,11 +38,13 @@ export const WalletPage = () => {
     if (isNaN(amount) || amount <= 0) return;
 
     try {
-      await walletService.addFunds(CURRENT_USER_ID, amount); 
+      // Ya no le pasamos el ID
+      await walletService.addFunds(amount); 
       setAmountToAdd('');
+      // Recargamos para ver el nuevo saldo
       loadWallet(); 
     } catch (err) {
-      alert('Hubo un error al intentar agregar fondos.');
+      alert('Hubo un error al intentar agregar fondos. Verifica estar autenticado.');
       console.error(err);
     }
   };
@@ -60,7 +61,7 @@ export const WalletPage = () => {
         <div style={{ flex: '1 1 300px', backgroundColor: 'var(--color-dark)', color: 'var(--color-light)', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>
           <h3 style={{ margin: '0 0 5px 0', color: 'var(--color-accent)' }}>Saldo Disponible</h3>
           <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0 0 20px 0' }}>
-            ${wallet?.balance?.toFixed(2) || '0.00'}
+            ${wallet?.availableBalance?.toFixed(2) || '0.00'}
           </p>
 
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '15px' }}>

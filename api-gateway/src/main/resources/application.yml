@@ -76,7 +76,7 @@ spring:
         - id: route-wallet
           uri: http://servicio-wallet:8081
           predicates:
-            - Path=/wallets/me/**
+            - Path=/wallets/**
           filters:
             - JwtAuthenticationFilter
             - name: RequestRateLimiter
