@@ -47,7 +47,8 @@ public class AuctionRepositoryAdapter implements AuctionRepository {
 
     @Override
     public List<Auction> findAuctionsToStart(LocalDateTime currentTime) {
-        return jpaRepository.findByStatusAndStartTimeLessThanEqual(AuctionStatus.DRAFT, currentTime)
+        // CAMBIO: Ahora el Scheduler busca las SCHEDULED para iniciarlas
+        return jpaRepository.findByStatusAndStartTimeLessThanEqual(AuctionStatus.SCHEDULED, currentTime)
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
@@ -65,7 +66,7 @@ public class AuctionRepositoryAdapter implements AuctionRepository {
     public boolean existsActiveAuctionForProduct(Long productId) {
         return jpaRepository.existsByProductIdAndStatusIn(
                 productId,
-                List.of(AuctionStatus.DRAFT, AuctionStatus.ACTIVE)
+                List.of(AuctionStatus.DRAFT, AuctionStatus.SCHEDULED, AuctionStatus.ACTIVE)
         );
     }
 

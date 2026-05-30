@@ -1,10 +1,16 @@
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
 }
 
 export interface AuthResponse {
   accessToken: string;
-  refreshToken: string;
-  username: string;
+  email: string;
+  userId: number;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  role: string; // Por defecto lo enviaremos como "USER"
 }

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// 1. NUEVO: Importamos Link
+import { useNavigate, Link } from 'react-router-dom'; 
 import { authService } from '../services/auth.service';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState(''); // <-- Ahora usamos username
+  // 2. CORRECCIÓN: Cambiamos username por email para que coincida con el backend
+  const [email, setEmail] = useState(''); 
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -15,7 +17,7 @@ export const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      await authService.login({ username, password }); // <-- Pasamos username
+      await authService.login({ email, password }); 
       navigate('/auctions');
     } catch (err) {
       setError('Credenciales incorrectas o servidor no disponible.');
@@ -33,14 +35,14 @@ export const LoginPage = () => {
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--color-dark)', fontWeight: 'bold' }}>Nombre de Usuario</label>
+            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--color-dark)', fontWeight: 'bold' }}>Correo Electrónico</label>
             <input 
-              type="text" 
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-              placeholder="ej: admin"
+              placeholder="ej: usuario@correo.com"
             />
           </div>
           
@@ -60,6 +62,15 @@ export const LoginPage = () => {
             {isLoading ? 'Iniciando...' : 'Ingresar'}
           </button>
         </form>
+
+        {/* 4. NUEVO: Enlace a la vista de registro */}
+        <div style={{ marginTop: '20px', textAlign: 'center', color: 'var(--color-dark)', fontSize: '0.9rem' }}>
+          ¿No tienes una cuenta?{' '}
+          <Link to="/register" style={{ color: 'var(--color-secondary)', fontWeight: 'bold', textDecoration: 'none' }}>
+            Regístrate aquí
+          </Link>
+        </div>
+
       </div>
     </div>
   );

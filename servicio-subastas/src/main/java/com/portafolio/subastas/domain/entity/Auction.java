@@ -50,8 +50,15 @@ public class Auction {
 
     public static Auction createNew(Long productId, Long sellerId, BigDecimal startingPrice,
                                     LocalDateTime startTime, LocalDateTime endTime) {
+
+        // Si la fecha de inicio es en el futuro, nace como SCHEDULED.
+        // Si la fecha es ahora o en el pasado, nace directamente como ACTIVE.
+        AuctionStatus initialStatus = startTime.isAfter(LocalDateTime.now())
+                ? AuctionStatus.SCHEDULED
+                : AuctionStatus.ACTIVE;
+
         return new Auction(null, productId, sellerId, startingPrice, startingPrice,
-                startTime, endTime, AuctionStatus.DRAFT, null);
+                startTime, endTime, initialStatus, null);
     }
 
     public static Auction restore(Long id, Long productId, Long sellerId, BigDecimal startingPrice,
@@ -62,8 +69,8 @@ public class Auction {
     }
 
     public void start() {
-        if (this.status != AuctionStatus.DRAFT) {
-            throw new InvalidAuctionStateException("Solo las subastas en DRAFT pueden iniciarse.");
+        if (this.status != AuctionStatus.DRAFT && this.status != AuctionStatus.SCHEDULED) {
+            throw new InvalidAuctionStateException("Solo las subastas en DRAFT o SCHEDULED pueden iniciarse.");
         }
         if (LocalDateTime.now().isAfter(this.endTime)) {
             throw new InvalidAuctionException("No se puede iniciar una subasta cuya fecha de fin ya pasó.");

@@ -3,9 +3,9 @@ export interface Auction {
   productId: number;
   sellerId: number;
   startingPrice: number;
-  currentHighestBid: number
+  currentHighestBid: number;
   startTime: string;
   endTime: string;
-  status: 'ACTIVE' | 'FINISHED' | 'CANCELLED';
+  status: string;    // 'ACTIVE', 'FINISHED', 'CANCELLED'
   winnerId: number | null;
 }

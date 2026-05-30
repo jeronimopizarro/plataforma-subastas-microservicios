@@ -57,7 +57,7 @@ public class CreateAuctionUseCase {
 
     private void validateNoActiveAuctionsForProduct(Long productId) {
         if (auctionRepository.existsActiveAuctionForProduct(productId)) {
-            throw new InvalidAuctionStateException("El producto ya se encuentra en una subasta DRAFT o ACTIVE.");
+            throw new InvalidAuctionStateException("El producto ya se encuentra en una subasta DRAFT, SCHEDULED o ACTIVE.");
         }
     }
 

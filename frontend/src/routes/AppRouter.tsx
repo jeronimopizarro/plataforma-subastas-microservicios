@@ -5,13 +5,14 @@ import { authService } from '../features/auth/services/auth.service';
 import { AuctionsPage } from '../features/auctions/pages/AuctionsPage';
 import type { ReactNode } from 'react';
 import { WalletPage } from '../features/wallet/pages/WalletPage';
+import { RegisterPage } from '../features/auth/pages/RegisterPage';
 
 // Un "Guard" que protege las rutas privadas
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   if (!authService.isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
-  return children; // Como ReactNode sabe manejar componentes, esto no da error
+  return children;
 };
 
 // Componentes temporales
@@ -28,6 +29,7 @@ export const AppRouter = () => {
       <Routes>
         {/* Ruta pública */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
         {/* Rutas protegidas */}
         <Route 
