@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import type { Auction } from '../types/auction.types';
 import { auctionService } from '../services/auction.service';
 import { AuctionCard } from '../components/AuctionCard';
+import { CreateAuctionModal } from '../components/CreateAuctionModal';
 
 export const AuctionsPage: React.FC = () => {
   const [auctions, setAuctions] = useState<Auction[]>([]);
  const [statusFilter, setStatusFilter] = useState<'ACTIVE' | 'FINISHED' | 'SCHEDULED'>('ACTIVE');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchAuctions = async () => {
@@ -30,7 +32,10 @@ export const AuctionsPage: React.FC = () => {
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
         <h1 style={{ color: 'var(--color-dark)', margin: 0 }}>Explorar Subastas</h1>
-        <button style={{ backgroundColor: 'var(--color-primary)', color: 'white', padding: '10px 20px', borderRadius: '6px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
+        <button 
+          onClick={() => setIsModalOpen(true)} // <-- ESTO
+          style={{ backgroundColor: 'var(--color-primary)', color: 'white', padding: '10px 20px', borderRadius: '6px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
+        >
           + Crear Subasta
         </button>
       </div>
@@ -97,6 +102,16 @@ export const AuctionsPage: React.FC = () => {
           <AuctionCard key={auction.id} auction={auction} />
         ))}
       </div>
+
+      {isModalOpen && (
+        <CreateAuctionModal 
+          onClose={() => setIsModalOpen(false)} 
+          onSuccess={() => {
+            window.location.reload(); 
+          }} 
+        />
+      )}
+
     </div>
   );
 };

@@ -51,6 +51,11 @@ public class Auction {
     public static Auction createNew(Long productId, Long sellerId, BigDecimal startingPrice,
                                     LocalDateTime startTime, LocalDateTime endTime) {
 
+        // Validar que la subasta no nazca ya terminada
+        if (endTime.isBefore(LocalDateTime.now())) {
+            throw new InvalidAuctionException("No se puede crear una subasta con fecha de fin en el pasado.");
+        }
+
         // Si la fecha de inicio es en el futuro, nace como SCHEDULED.
         // Si la fecha es ahora o en el pasado, nace directamente como ACTIVE.
         AuctionStatus initialStatus = startTime.isAfter(LocalDateTime.now())

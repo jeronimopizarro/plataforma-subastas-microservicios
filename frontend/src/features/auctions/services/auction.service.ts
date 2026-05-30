@@ -1,6 +1,6 @@
 import { apiClient } from '../../../shared/services/api';
-import type { Auction } from '../types/auction.types';
-import type { Product } from '../types/product.types';
+import type { Auction, CreateAuctionRequest } from '../types/auction.types';
+import type { CreateProductRequest, Product } from '../types/product.types';
 
 export const auctionService = {
   // Obtener subastas filtradas por estado (ACTIVE o FINISHED)
@@ -15,9 +15,19 @@ export const auctionService = {
     return response.data;
   },
 
-  // (Preparando el terreno para después) Obtener detalle de una subasta
+  // Obtener detalle de una subasta
   getAuctionById: async (auctionId: number): Promise<Auction> => {
     const response = await apiClient.get<Auction>(`/auctions/${auctionId}`);
+    return response.data;
+  },
+
+  createProduct: async (productData: CreateProductRequest): Promise<Product> => {
+    const response = await apiClient.post<Product>('/products', productData);
+    return response.data;
+  },
+
+  createAuction: async (auctionData: CreateAuctionRequest): Promise<Auction> => {
+    const response = await apiClient.post<Auction>('/auctions', auctionData);
     return response.data;
   }
 };

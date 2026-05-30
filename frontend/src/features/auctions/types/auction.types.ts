@@ -9,3 +9,10 @@ export interface Auction {
   status: string;    // 'ACTIVE', 'FINISHED', 'CANCELLED'
   winnerId: number | null;
 }
+
+export interface CreateAuctionRequest {
+  productId: number;
+  startingPrice: number;
+  startTime: string; 
+  endTime: string;
+}
