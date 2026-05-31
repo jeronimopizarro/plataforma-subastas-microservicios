@@ -154,7 +154,27 @@ export const AuctionDetailPage = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
             <span style={{ fontWeight: 'bold', color: '#666', border: '1px solid #ccc', padding: '5px 10px', borderRadius: '6px' }}>{product.condition}</span>
           </div>
-          <h1 style={{ margin: '0 0 20px 0', color: 'var(--color-dark)', fontSize: '2.2rem' }}>{product.name}</h1> 
+
+          {/* --- IMAGEN DEL PRODUCTO (USANDO LA URL DE TU BASE DE DATOS) --- */}
+          <div style={{ 
+            width: '100%', 
+            height: '350px', 
+            backgroundColor: '#f8f9fa', 
+            borderRadius: '12px',
+            marginBottom: '25px',
+            overflow: 'hidden',
+            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
+          }}>
+            <img 
+              src={product.imageUrl || '/favicon.svg'} 
+              alt={product.title}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              onError={(e) => { e.currentTarget.src = '/favicon.svg'; e.currentTarget.style.objectFit = 'contain'; e.currentTarget.style.padding = '20px'; }}
+            />
+          </div>
+
+          {/* Camiamos product.name por product.title */}
+          <h1 style={{ margin: '0 0 20px 0', color: 'var(--color-dark)', fontSize: '2.2rem' }}>{product.title}</h1> 
           <p style={{ color: '#555', lineHeight: '1.6', fontSize: '1.1rem', whiteSpace: 'pre-line' }}>{product.description}</p>
         </div>
 
@@ -232,7 +252,7 @@ export const AuctionDetailPage = () => {
                   >
                     <span style={{ color: '#666', fontSize: '0.85rem' }}>
                       <strong style={{ color: '#555' }}>{bid.bidderEmail || 'Anónimo'}</strong> • {' '}
-                      {bid.createdAt ? new Date(bid.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}) : 'Reciente'}
+                      {bid.timestamp ? new Date(bid.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}) : 'Reciente'}
                     </span>
                     <strong style={{ color: index === 0 ? '#28a745' : 'var(--color-dark)' }}>
                       ${bid.amount.toFixed(2)}

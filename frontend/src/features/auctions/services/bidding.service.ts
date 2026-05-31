@@ -6,7 +6,7 @@ export interface Bid {
   bidderId: number;
   bidderEmail?: string;
   amount: number;
-  createdAt: string; 
+  timestamp: string;
 }
 
 export const biddingService = {
@@ -18,6 +18,11 @@ export const biddingService = {
   // NUEVO: Llama al GET /bids/auction/{id}
   getBidsByAuctionId: async (auctionId: number): Promise<Bid[]> => {
     const response = await apiClient.get<Bid[]>(`/bids/auction/${auctionId}`);
+    return response.data;
+  },
+
+  getMyBids: async (): Promise<Bid[]> => {
+    const response = await apiClient.get<Bid[]>('/bids/mine');
     return response.data;
   }
 };

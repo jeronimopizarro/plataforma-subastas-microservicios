@@ -31,13 +31,10 @@ export const MainLayout = () => {
         
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <Link to="/auctions" style={{ color: 'var(--color-light)', textDecoration: 'none', fontSize: '1.1rem' }}>
-            🛒 Subastas
+            🛒 Catálogo de Subastas
           </Link>
           <Link to="/wallet" style={{ color: 'var(--color-light)', textDecoration: 'none', fontSize: '1.1rem' }}>
-            💳 Mi Billetera
-          </Link>
-          <Link to="/bids" style={{ color: 'var(--color-light)', textDecoration: 'none', fontSize: '1.1rem' }}>
-            🔨 Mis Pujas
+            💳 Mi Billetera y Actividad
           </Link>
         </nav>
 

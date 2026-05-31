@@ -1,35 +1,43 @@
 import React, { useEffect, useState } from 'react';
 import { walletService } from '../services/wallet.service';
+import { biddingService, type Bid } from '../../auctions/services/bidding.service'; // <-- Importamos el servicio de pujas
 import type { Wallet } from '../types/wallet.types';
+import { Link } from 'react-router-dom';
 
 export const WalletPage = () => {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [amountToAdd, setAmountToAdd] = useState('');
+  const [myBids, setMyBids] = useState<Bid[]>([]); // <-- Estado para el historial
   const [loading, setLoading] = useState(true);
 
-  // Ya no usamos mocks. Sacamos el ID real que guardó el auth.service al hacer login
   const userIdFromStorage = localStorage.getItem('userId');
   const CURRENT_USER_ID = userIdFromStorage ? parseInt(userIdFromStorage, 10) : 0;
 
-  const loadWallet = async () => {
+  const loadDashboardData = async () => {
     try {
       setLoading(true);
-      // Ya no le pasamos el ID, el token hace la magia
-      const data = await walletService.getWallet();
-      setWallet(data);
-    } catch (err: any) {
-      if (err.response?.status === 404) {
-        setWallet({ id: 0, userId: CURRENT_USER_ID, availableBalance: 0, heldFunds: 0 }); 
-      } else {
-        console.error("Error al cargar la billetera", err);
-      }
+      // Ejecutamos ambas peticiones en paralelo para mayor velocidad
+      const [walletData, bidsData] = await Promise.all([
+        walletService.getWallet().catch(err => {
+          if (err.response?.status === 404) {
+            return { id: 0, userId: CURRENT_USER_ID, availableBalance: 0, heldFunds: 0 };
+          }
+          throw err;
+        }),
+        biddingService.getMyBids().catch(() => []) // Si falla, devolvemos array vacío
+      ]);
+
+      setWallet(walletData);
+      setMyBids(bidsData);
+    } catch (err) {
+      console.error("Error al cargar los datos del dashboard", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadWallet();
+    loadDashboardData();
   }, []);
 
   const handleAddFunds = async (e: React.FormEvent) => {
@@ -38,24 +46,22 @@ export const WalletPage = () => {
     if (isNaN(amount) || amount <= 0) return;
 
     try {
-      // Ya no le pasamos el ID
       await walletService.addFunds(amount); 
       setAmountToAdd('');
-      // Recargamos para ver el nuevo saldo
-      loadWallet(); 
+      loadDashboardData(); // Recargamos para ver el nuevo saldo
     } catch (err) {
       alert('Hubo un error al intentar agregar fondos. Verifica estar autenticado.');
-      console.error(err);
     }
   };
 
-  if (loading) return <h3 style={{ color: 'var(--color-dark)' }}>Cargando billetera... ⏳</h3>;
+  if (loading) return <h3 style={{ color: 'var(--color-dark)' }}>Cargando tu información... ⏳</h3>;
 
   return (
-    <div>
-      <h2 style={{ color: 'var(--color-secondary)', marginBottom: '20px' }}>💳 Mi Billetera Virtual</h2>
+    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <h2 style={{ color: 'var(--color-secondary)', marginBottom: '20px' }}>💳 Mi Billetera y Actividad</h2>
 
-      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+      {/* SECCIÓN SUPERIOR: TARJETAS DE SALDO */}
+      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '40px' }}>
         
         {/* Tarjeta de Saldos */}
         <div style={{ flex: '1 1 300px', backgroundColor: 'var(--color-dark)', color: 'var(--color-light)', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>
@@ -63,7 +69,6 @@ export const WalletPage = () => {
           <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0 0 20px 0' }}>
             ${wallet?.availableBalance?.toFixed(2) || '0.00'}
           </p>
-
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '15px' }}>
             <p style={{ margin: '0', fontSize: '0.9rem', color: '#ccc' }}>Fondos Retenidos en Pujas Activas</p>
             <p style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '5px 0 0 0', color: 'var(--color-primary)' }}>
@@ -75,22 +80,17 @@ export const WalletPage = () => {
         {/* Tarjeta para Cargar Saldo */}
         <div style={{ flex: '1 1 300px', backgroundColor: 'white', padding: '30px', borderRadius: '12px', borderTop: '5px solid var(--color-primary)', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
           <h3 style={{ margin: '0 0 20px 0', color: 'var(--color-dark)' }}>Cargar Dinero</h3>
-          
           <form onSubmit={handleAddFunds} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>Monto a ingresar ($)</label>
               <input 
-                type="number" 
-                step="0.01"
-                min="1"
+                type="number" step="0.01" min="1" required
                 value={amountToAdd}
                 onChange={(e) => setAmountToAdd(e.target.value)}
-                required
                 style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '1.1rem' }}
                 placeholder="Ej: 500.00"
               />
             </div>
-
             <button 
               type="submit" 
               style={{ padding: '14px', backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', transition: '0.2s' }}
@@ -99,8 +99,57 @@ export const WalletPage = () => {
             </button>
           </form>
         </div>
-
       </div>
+
+      {/* SECCIÓN INFERIOR: HISTORIAL DE PUJAS */}
+      <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+        <h3 style={{ margin: '0 0 20px 0', color: 'var(--color-dark)', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
+          🕒 Mi Historial de Pujas
+        </h3>
+        
+        {myBids.length === 0 ? (
+          <p style={{ color: '#888', textAlign: 'center', padding: '20px 0' }}>Aún no has participado en ninguna subasta.</p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f9f9f9', color: '#555' }}>
+                  <th style={{ padding: '12px', borderBottom: '2px solid #eee' }}>Fecha</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid #eee' }}>ID Subasta</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid #eee' }}>Monto Ofertado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...myBids]
+                  .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                  .map((bid) => (
+                  <tr key={bid.id} style={{ borderBottom: '1px solid #eee', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                    <td style={{ padding: '12px', color: '#666' }}>
+                      {new Date(bid.timestamp).toLocaleDateString()} a las {new Date(bid.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </td>
+                    
+                    {/* COLUMNA ACTUALIZADA CON EL ENLACE */}
+                    <td style={{ padding: '12px', fontWeight: 'bold' }}>
+                      <Link 
+                        to={`/auctions/${bid.auctionId}`} 
+                        style={{ color: 'var(--color-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
+                        title="Ir a la subasta"
+                      >
+                        #{bid.auctionId} 🔗
+                      </Link>
+                    </td>
+
+                    <td style={{ padding: '12px', fontWeight: 'bold', color: 'var(--color-dark)' }}>
+                      ${bid.amount.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 };

@@ -52,7 +52,7 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
       flexDirection: 'column'
     }}>
       <div style={{ flex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
           <span style={{ 
             backgroundColor: config.color, 
             color: 'white', 
@@ -63,10 +63,31 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
           }}>
             {config.label}
           </span>
-          <span style={{ fontSize: '0.9rem', color: '#666' }}>Condición: {product.condition}</span>
+          <span style={{ fontSize: '0.9rem', color: '#666' }}>{product.condition}</span>
         </div>
         
-        <h3 style={{ margin: '0 0 10px 0', fontSize: '1.2rem' }}>{product.name}</h3> {/* OJO: asegúrate que en tu DTO es title o name */}
+        {/* --- IMAGEN DEL PRODUCTO (USANDO LA URL DE TU BASE DE DATOS) --- */}
+        <div style={{ 
+          width: '100%', 
+          height: '200px', 
+          backgroundColor: '#f8f9fa', 
+          borderRadius: '8px',
+          marginBottom: '15px',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <img 
+            src={product.imageUrl || '/favicon.svg'} 
+            alt={product.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onError={(e) => { e.currentTarget.src = '/favicon.svg'; e.currentTarget.style.objectFit = 'contain'; e.currentTarget.style.padding = '20px'; }}
+          />
+        </div>
+        
+        {/* Cambiamos product.name por product.title */}
+        <h3 style={{ margin: '0 0 10px 0', fontSize: '1.2rem' }}>{product.title}</h3>
         <p style={{ color: '#555', fontSize: '0.95rem', marginBottom: '20px', WebkitLineClamp: 2, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {product.description}
         </p>

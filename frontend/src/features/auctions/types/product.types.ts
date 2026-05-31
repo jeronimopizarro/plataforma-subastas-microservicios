@@ -1,9 +1,10 @@
 export interface Product {
   id: number;
-  name: string;
+  title: string;
   description: string;
   condition: string;
-  ownerId: number;
+  imageUrl: string;
+  sellerId: number;
   active: boolean;
 }
 
