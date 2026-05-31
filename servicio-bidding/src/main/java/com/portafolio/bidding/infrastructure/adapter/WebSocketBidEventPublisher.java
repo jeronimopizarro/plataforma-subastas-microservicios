@@ -19,11 +19,12 @@ public class WebSocketBidEventPublisher implements BidEventPublisher {
     }
 
     @Override
-    public void publishNewBid(Long auctionId, Long bidderId, BigDecimal amount) {
+    public void publishNewBid(Long auctionId, Long bidderId, String bidderEmail, BigDecimal amount) {
         // Armamos el "paquete" de datos que le llegará al Frontend
         Map<String, Object> notification = Map.of(
                 "auctionId", auctionId,
                 "newWinnerId", bidderId,
+                "bidderEmail", bidderEmail,
                 "amount", amount,
                 "timestamp", LocalDateTime.now()
         );

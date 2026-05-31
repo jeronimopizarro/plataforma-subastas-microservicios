@@ -5,6 +5,7 @@ import com.portafolio.bidding.application.port.BidEventPublisher;
 import com.portafolio.bidding.domain.entity.Bid;
 import com.portafolio.bidding.domain.repository.BidRepository;
 import com.portafolio.bidding.infrastructure.client.AuctionFeignClient;
+import com.portafolio.bidding.infrastructure.client.UserFeignClient;
 import com.portafolio.bidding.infrastructure.client.WalletFeignClient;
 
 import com.portafolio.bidding.infrastructure.client.dto.AuctionResponse;
@@ -19,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,6 +34,7 @@ class PlaceBidUseCaseTest {
     @Mock private WalletFeignClient walletClient;
     @Mock private BidRepository bidRepository;
     @Mock private BidEventPublisher bidEventPublisher;
+    @Mock private UserFeignClient userFeignClient;
 
     @InjectMocks private PlaceBidUseCase placeBidUseCase;
 
@@ -46,6 +49,8 @@ class PlaceBidUseCaseTest {
         when(auctionClient.getAuctionById(1L)).thenReturn(mockAuction);
         when(bidRepository.save(any(Bid.class))).thenAnswer(i -> i.getArguments()[0]);
 
+        when(userFeignClient.getUserEmail(2L)).thenReturn(Map.of("email", "jeronimo@gmail.com"));
+
         // PASAMOS "2" PORQUE EL BIDDER ID ES 2L
         Bid result = placeBidUseCase.execute(command, "2");
 
@@ -55,7 +60,9 @@ class PlaceBidUseCaseTest {
         verify(walletClient, times(1)).holdFunds(eq(2L), any(TransactionRequest.class));
         verify(auctionClient, times(1)).updateCurrentBid(eq(1L), any(UpdateBidRequest.class));
         verify(walletClient, never()).releaseFunds(anyLong(), any(TransactionRequest.class));
-        verify(bidEventPublisher, times(1)).publishNewBid(eq(1L), eq(2L), eq(new BigDecimal("500.00")));
+
+        // comprobando además que la lógica de enmascaramiento funcionó ("jeronimo" -> "jer***").
+        verify(bidEventPublisher, times(1)).publishNewBid(eq(1L), eq(2L), eq("jer***@gmail.com"), eq(new BigDecimal("500.00")));
     }
 
     @Test
@@ -95,7 +102,9 @@ class PlaceBidUseCaseTest {
         verify(walletClient, times(1)).holdFunds(eq(2L), any(TransactionRequest.class));
         verify(walletClient, times(1)).releaseFunds(eq(2L), any(TransactionRequest.class));
         verify(bidRepository, never()).save(any());
-        verify(bidEventPublisher, never()).publishNewBid(anyLong(), anyLong(), any(BigDecimal.class));
+
+        // NUEVO: Agregamos anyString() como tercer parámetro para cumplir la firma de 4 argumentos
+        verify(bidEventPublisher, never()).publishNewBid(anyLong(), anyLong(), anyString(), any(BigDecimal.class));
     }
 
     // ¡NUEVO TEST DE SEGURIDAD!

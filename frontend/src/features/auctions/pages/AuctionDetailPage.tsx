@@ -5,7 +5,7 @@ import SockJS from 'sockjs-client';
 
 import { auctionService } from '../services/auction.service';
 import { walletService } from '../../wallet/services/wallet.service';
-import { biddingService } from '../services/bidding.service';
+import { biddingService, type Bid } from '../services/bidding.service';
 
 import type { Auction } from '../types/auction.types';
 import type { Product } from '../types/product.types';
@@ -18,12 +18,14 @@ export const AuctionDetailPage = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [availableBalance, setAvailableBalance] = useState<number>(0);
   
+  // <-- NUEVO ESTADO PARA EL HISTORIAL DE PUJAS
+  const [bids, setBids] = useState<Bid[]>([]); 
+  
   const [bidAmount, setBidAmount] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [bidError, setBidError] = useState('');
   
-  // Nuevo estado para el indicador visual de conexión WebSocket
   const [isConnected, setIsConnected] = useState(false);
 
   const loadWallet = async () => {
@@ -41,8 +43,16 @@ export const AuctionDetailPage = () => {
       if (!id) return;
       try {
         setLoading(true);
-        const auctionData = await auctionService.getAuctionById(parseInt(id, 10));
+        const auctionId = parseInt(id, 10);
+        
+        // Cargamos Subasta, Producto, Billetera y el NUEVO HISTORIAL en paralelo
+        const [auctionData, bidsData] = await Promise.all([
+          auctionService.getAuctionById(auctionId),
+          biddingService.getBidsByAuctionId(auctionId)
+        ]);
+
         setAuction(auctionData);
+        setBids(bidsData); // <-- Guardamos el historial inicial
 
         const productData = await auctionService.getProductById(auctionData.productId);
         setProduct(productData);
@@ -62,21 +72,21 @@ export const AuctionDetailPage = () => {
   useEffect(() => {
     if (!id) return;
 
-    // Conectamos apuntando al API Gateway
-    const socketUrl = 'http://localhost:9000/ws-bidding';
+    const socketUrl = 'http://localhost:9000/ws-bidding'; 
     
     const stompClient = new Client({
       webSocketFactory: () => new SockJS(socketUrl),
-      reconnectDelay: 5000, // Intentar reconectar si se corta
+      reconnectDelay: 5000,
       onConnect: () => {
         setIsConnected(true);
-        // Nos suscribimos al topic publicado por tu WebSocketBidEventPublisher
         stompClient.subscribe(`/topic/auctions/${id}`, (message) => {
-          const newBidData = JSON.parse(message.body);
-          console.log("¡Nueva puja recibida en vivo!", newBidData);
+          const newBidData: Bid = JSON.parse(message.body);
           
-          // Actualizamos mágicamente el estado sin recargar la página
+          // 1. Actualizamos el precio gigante
           setAuction(prev => prev ? { ...prev, currentHighestBid: newBidData.amount } : null);
+          
+          // 2. Agregamos la nueva puja al principio del historial sin recargar la página!
+          setBids(prevBids => [newBidData, ...prevBids]);
         });
       },
       onDisconnect: () => {
@@ -86,7 +96,6 @@ export const AuctionDetailPage = () => {
 
     stompClient.activate();
 
-    // Limpieza al desmontar el componente (salir de la vista)
     return () => {
       stompClient.deactivate();
     };
@@ -108,20 +117,13 @@ export const AuctionDetailPage = () => {
       return;
     }
 
-    // Enviamos la petición real al Backend
     try {
       if (auction) {
         await biddingService.placeBid(auction.id, amount);
-        setBidAmount(''); // Limpiamos el input
-        
-        // Recargamos la billetera porque ahora tenemos fondos retenidos
+        setBidAmount(''); 
         await loadWallet(); 
-        
-        // No necesitamos actualizar el precio actual a mano porque el WebSocket 
-        // nos lo va a avisar instantáneamente desde el servidor.
       }
     } catch (err: any) {
-      // Capturamos las excepciones que arroja tu backend
       setBidError(err.response?.data?.message || 'Error al intentar procesar la puja.');
     }
   };
@@ -139,7 +141,6 @@ export const AuctionDetailPage = () => {
           ← Volver al catálogo
         </button>
         
-        {/* Indicador de conexión WebSocket */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#666' }}>
           <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: isConnected ? '#28a745' : '#dc3545', boxShadow: isConnected ? '0 0 5px #28a745' : 'none' }} />
           {isConnected ? 'Conectado en vivo' : 'Reconectando...'}
@@ -147,33 +148,32 @@ export const AuctionDetailPage = () => {
       </div>
 
       <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap' }}>
-        {/* Columna Izquierda: Producto (Igual que antes) */}
+        
+        {/* COLUMNA IZQUIERDA: Producto */}
         <div style={{ flex: '1 1 500px', backgroundColor: 'white', padding: '40px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
             <span style={{ fontWeight: 'bold', color: '#666', border: '1px solid #ccc', padding: '5px 10px', borderRadius: '6px' }}>{product.condition}</span>
           </div>
-          <h1 style={{ margin: '0 0 20px 0', color: 'var(--color-dark)', fontSize: '2.2rem' }}>{product.name}</h1>
+          <h1 style={{ margin: '0 0 20px 0', color: 'var(--color-dark)', fontSize: '2.2rem' }}>{product.name}</h1> 
           <p style={{ color: '#555', lineHeight: '1.6', fontSize: '1.1rem', whiteSpace: 'pre-line' }}>{product.description}</p>
         </div>
 
-        {/* Columna Derecha: Panel de Pujas */}
+        {/* COLUMNA DERECHA: Interacción */}
         <div style={{ flex: '1 1 350px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           <div style={{ backgroundColor: 'var(--color-dark)', color: 'white', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>
             <h3 style={{ margin: '0 0 10px 0', color: 'var(--color-accent)' }}>
               {auction.status === 'SCHEDULED' ? 'Precio Base' : isFinished ? 'Precio Final' : 'Oferta Actual Ganadora'}
             </h3>
-            
-            {/* ESTE PRECIO SE ACTUALIZA SOLO VÍA WEBSOCKET */}
             <p style={{ fontSize: '3.5rem', fontWeight: 'bold', margin: '0', transition: 'color 0.3s' }}>
               ${auction.currentHighestBid.toFixed(2)}
             </p>
-            
             <p style={{ margin: '15px 0 0 0', color: '#ccc', fontSize: '0.9rem', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '10px' }}>
               Estado del evento: <strong style={{ color: auction.status === 'ACTIVE' ? '#28a745' : 'white' }}>{auction.status}</strong>
             </p>
           </div>
 
+          {/* Formulario de Puja */}
           {!isFinished && (
             <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '12px', borderTop: '5px solid var(--color-primary)', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', fontSize: '0.9rem', paddingBottom: '10px', borderBottom: '1px solid #eee' }}>
@@ -194,9 +194,7 @@ export const AuctionDetailPage = () => {
                     style={{ width: '100%', padding: '14px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', fontSize: '1.2rem' }}
                   />
                 </div>
-
                 {bidError && <div style={{ color: '#d32f2f', backgroundColor: '#ffebee', padding: '12px', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 'bold' }}>⚠️ {bidError}</div>}
-
                 <button 
                   type="submit" 
                   disabled={auction.status === 'SCHEDULED' || !isConnected}
@@ -207,6 +205,44 @@ export const AuctionDetailPage = () => {
               </form>
             </div>
           )}
+
+          {/* NUEVO: PANEL DE HISTORIAL DE PUJAS */}
+          <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+            <h4 style={{ margin: '0 0 15px 0', color: 'var(--color-dark)', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
+              Historial en Vivo ({bids.length})
+            </h4>
+            
+            {bids.length === 0 ? (
+              <p style={{ color: '#888', fontSize: '0.9rem', textAlign: 'center', margin: '20px 0' }}>
+                Aún no hay pujas. ¡Rompe el hielo!
+              </p>
+            ) : (
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, maxHeight: '250px', overflowY: 'auto' }}>
+                {bids.map((bid, index) => (
+                  <li 
+                    key={bid.id || `ws-bid-${index}`} 
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      padding: '12px 10px', 
+                      borderBottom: '1px solid #f0f0f0',
+                      backgroundColor: index === 0 ? '#f0fdf4' : 'transparent', // Resaltamos la última en verde claro
+                      transition: 'background-color 0.5s'
+                    }}
+                  >
+                    <span style={{ color: '#666', fontSize: '0.85rem' }}>
+                      <strong style={{ color: '#555' }}>{bid.bidderEmail || 'Anónimo'}</strong> • {' '}
+                      {bid.createdAt ? new Date(bid.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}) : 'Reciente'}
+                    </span>
+                    <strong style={{ color: index === 0 ? '#28a745' : 'var(--color-dark)' }}>
+                      ${bid.amount.toFixed(2)}
+                    </strong>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
         </div>
       </div>
     </div>

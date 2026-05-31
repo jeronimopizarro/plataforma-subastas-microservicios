@@ -16,6 +16,7 @@ public class BidResponseMapper {
                 bid.getId(),
                 bid.getAuctionId(),
                 bid.getBidderId(),
+                null,
                 bid.getAmount(),
                 bid.getTimestamp()
         );

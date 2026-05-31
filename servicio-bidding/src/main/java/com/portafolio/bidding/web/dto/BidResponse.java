@@ -7,6 +7,7 @@ public record BidResponse(
         Long id,
         Long auctionId,
         Long bidderId,
+        String bidderEmail,
         BigDecimal amount,
         LocalDateTime timestamp) {
 }

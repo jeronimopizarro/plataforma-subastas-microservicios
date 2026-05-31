@@ -7,6 +7,7 @@ import com.portafolio.bidding.domain.exception.DomainException;
 import com.portafolio.bidding.domain.exception.ErrorCode;
 import com.portafolio.bidding.domain.repository.BidRepository;
 import com.portafolio.bidding.infrastructure.client.AuctionFeignClient;
+import com.portafolio.bidding.infrastructure.client.UserFeignClient;
 import com.portafolio.bidding.infrastructure.client.WalletFeignClient;
 import com.portafolio.bidding.infrastructure.client.dto.AuctionResponse;
 import com.portafolio.bidding.infrastructure.client.dto.TransactionRequest;
@@ -27,15 +28,19 @@ public class PlaceBidUseCase {
     private final WalletFeignClient walletClient;
     private final BidRepository bidRepository;
     private final BidEventPublisher bidEventPublisher;
+    private final UserFeignClient userFeignClient;
     private static final Logger logger = LoggerFactory.getLogger(PlaceBidUseCase.class);
 
     public PlaceBidUseCase(AuctionFeignClient auctionClient,
                            WalletFeignClient walletClient,
-                           BidRepository bidRepository, BidEventPublisher bidEventPublisher) {
+                           BidRepository bidRepository,
+                           BidEventPublisher bidEventPublisher,
+                           UserFeignClient userFeignClient) {
         this.auctionClient = auctionClient;
         this.walletClient = walletClient;
         this.bidRepository = bidRepository;
         this.bidEventPublisher = bidEventPublisher;
+        this.userFeignClient = userFeignClient;
     }
 
     @CircuitBreaker(name = "subastas", fallbackMethod = "fallbackPlaceBid")
@@ -55,8 +60,21 @@ public class PlaceBidUseCase {
 
             Bid savedBid = saveBidHistory(command.auctionId(), command.bidderId(), command.amount());
 
-            bidEventPublisher.publishNewBid(savedBid.getAuctionId(), savedBid.getBidderId(), savedBid.getAmount());
+            String rawEmail;
+            try {
+                rawEmail = userFeignClient.getUserEmail(savedBid.getBidderId()).get("email");
+            } catch (Exception e) {
+                // CAMBIO TEMPORAL PARA DEBUGEAR
+                logger.error("¡ERROR EN FEIGN! El servicio de usuarios falló al consultar el ID {}. Error: {}",
+                        savedBid.getBidderId(), e.getMessage());
+                rawEmail = "error-de-comunicacion@sistema.com";
+            }
 
+            String maskedEmail = maskEmail(rawEmail);
+
+            // Actualizamos la llamada al publicador agregando el maskedEmail
+            bidEventPublisher.publishNewBid(savedBid.getAuctionId(), savedBid.getBidderId(), maskedEmail, savedBid.getAmount());
+            // --- FIN NUEVA LÓGICA --
             return savedBid;
 
         } catch (Exception e) {
@@ -73,7 +91,6 @@ public class PlaceBidUseCase {
             throw new DomainException(ErrorCode.UNAUTHORIZED, "Error 403: No puedes realizar una puja a nombre de otro usuario.");
         }
     }
-
 
     private AuctionResponse fetchAndValidateAuction(Long auctionId, BigDecimal amount, Long bidderId) {
         AuctionResponse auction = auctionClient.getAuctionById(auctionId);
@@ -117,18 +134,23 @@ public class PlaceBidUseCase {
         walletClient.releaseFunds(bidderId, new TransactionRequest(amount, "Devolución por error en puja: " + auctionId));
     }
 
-    public Bid fallbackPlaceBid(PlaceBidCommand command, String authUserId, Throwable t) {
+    // --- NUEVO MÉTODO PRIVADO PARA ENMASCARAR ---
+    private String maskEmail(String email) {
+        if (email == null || !email.contains("@")) return "***";
+        String[] parts = email.split("@");
+        String name = parts[0];
+        String domain = parts[1];
+        if (name.length() <= 3) return name + "***@" + domain;
+        return name.substring(0, 3) + "***@" + domain;
+    }
 
-        // Si el error es una regla de negocio nuestra
-        // simplemente lo volvemos a lanzar tal cual para que el Handler lo convierta en 400.
+    public Bid fallbackPlaceBid(PlaceBidCommand command, String authUserId, Throwable t) {
         if (t instanceof DomainException domainException) {
             throw domainException;
         }
 
-        // 1. Verificamos si el error viene de Feign (Errores HTTP de otros servicios)
         if (t instanceof feign.FeignException feignException) {
             int status = feignException.status();
-
             if (status >= 400 && status < 500) {
                 logger.warn("El servicio externo rechazó la operación (Status {}). Motivo: {}", status, feignException.getMessage());
                 throw new DomainException(
@@ -138,7 +160,6 @@ public class PlaceBidUseCase {
             }
         }
 
-        // 2. Fallo real de infraestructura (500 o Connection Refused)
         logger.error("¡Circuit Breaker activado! La red o el servidor fallaron. Motivo: {}", t.getMessage());
 
         throw new DomainException(
