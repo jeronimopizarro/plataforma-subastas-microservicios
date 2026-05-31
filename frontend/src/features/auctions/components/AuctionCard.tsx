@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+// IMPORTAMOS LINK
+import { Link } from 'react-router-dom'; 
 import type { Auction } from '../types/auction.types';
 import type { Product } from '../types/product.types';
 import { auctionService } from '../services/auction.service';
@@ -45,9 +47,11 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
       padding: '20px', 
       backgroundColor: '#fff',
       boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-      opacity: isFinished ? 0.7 : 1 
+      opacity: isFinished ? 0.7 : 1,
+      display: 'flex',
+      flexDirection: 'column'
     }}>
-      <div>
+      <div style={{ flex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <span style={{ 
             backgroundColor: config.color, 
@@ -62,8 +66,8 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
           <span style={{ fontSize: '0.9rem', color: '#666' }}>Condición: {product.condition}</span>
         </div>
         
-        <h3 style={{ margin: '0 0 10px 0', fontSize: '1.2rem' }}>{product.name}</h3>
-        <p style={{ color: '#555', fontSize: '0.95rem', marginBottom: '20px', WebkitLineClamp: 2 }}>
+        <h3 style={{ margin: '0 0 10px 0', fontSize: '1.2rem' }}>{product.name}</h3> {/* OJO: asegúrate que en tu DTO es title o name */}
+        <p style={{ color: '#555', fontSize: '0.95rem', marginBottom: '20px', WebkitLineClamp: 2, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {product.description}
         </p>
       </div>
@@ -76,22 +80,24 @@ export const AuctionCard: React.FC<AuctionCardProps> = ({ auction }) => {
           ${auction.currentHighestBid.toFixed(2)}
         </p>
         
-        <button 
-          disabled={auction.status !== 'ACTIVE'} 
+        <Link 
+          to={`/auctions/${auction.id}`}
           style={{ 
+            display: 'block',
+            textAlign: 'center',
             width: '100%', 
             padding: '10px', 
-            backgroundColor: auction.status !== 'ACTIVE' ? '#ccc' : 'var(--color-secondary)', 
+            backgroundColor: 'var(--color-secondary)', 
             color: 'white', 
+            textDecoration: 'none',
             border: 'none', 
             borderRadius: '6px', 
             fontWeight: 'bold',
-            cursor: auction.status !== 'ACTIVE' ? 'not-allowed' : 'pointer'
+            boxSizing: 'border-box'
           }}
         >
-          {auction.status === 'SCHEDULED' ? 'Esperando inicio' : 
-           auction.status === 'FINISHED' ? 'Ver Resultados' : 'Pujar'}
-        </button>
+          Ver Detalles
+        </Link>
       </div>
     </div>
   );

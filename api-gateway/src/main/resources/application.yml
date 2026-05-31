@@ -109,6 +109,11 @@ spring:
                 key-resolver: "#{@userKeyResolver}"
 
         - id: route-bidding-ws
-          uri: ws://servicio-bidding:8082
+          uri: http://servicio-bidding:8082
           predicates:
             - Path=/ws-bidding/**
+          filters:
+            - name: DedupeResponseHeader
+              args:
+                name: Access-Control-Allow-Origin Access-Control-Allow-Credentials
+                strategy: RETAIN_FIRST

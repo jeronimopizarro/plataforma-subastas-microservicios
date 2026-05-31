@@ -20,9 +20,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Este es el endpoint al que se conectará el Frontend (React/Angular) para abrir el túnel
         registry.addEndpoint("/ws-bidding")
-                .setAllowedOriginPatterns("*") // Permite conexiones desde cualquier origen (CORS)
-                .withSockJS(); // Soporte de retrocompatibilidad si el navegador falla con WebSockets puros
+                .setAllowedOrigins("http://localhost:5173")
+                .withSockJS();
     }
 }

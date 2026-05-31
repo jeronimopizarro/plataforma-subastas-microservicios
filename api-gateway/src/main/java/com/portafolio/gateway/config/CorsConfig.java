@@ -14,12 +14,14 @@ public class CorsConfig {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOrigins(Arrays.asList("*")); // En producción acá va la URL de tu frontend
+        // 1. Reemplazamos el "*" por la URL de React
+        corsConfig.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+        // 2. Habilitamos las credenciales (Obligatorio para SockJS)
+        corsConfig.setAllowCredentials(true);
         corsConfig.setMaxAge(3600L);
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
 
-        // Aplicar esta regla a absolutamente todas las rutas que pasen por el Gateway
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfig);
 
