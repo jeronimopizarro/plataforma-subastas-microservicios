@@ -1,27 +1,39 @@
 package com.portafolio.bidding.infrastructure.adapter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.portafolio.bidding.infrastructure.config.RabbitMQConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Component
 public class RabbitMQNotificationPublisher {
 
     private final RabbitTemplate rabbitTemplate;
+    private final ObjectMapper objectMapper;
     private static final Logger logger = LoggerFactory.getLogger(RabbitMQNotificationPublisher.class);
 
-    public RabbitMQNotificationPublisher(RabbitTemplate rabbitTemplate) {
+    public RabbitMQNotificationPublisher(RabbitTemplate rabbitTemplate, ObjectMapper objectMapper) {
         this.rabbitTemplate = rabbitTemplate;
+        this.objectMapper = objectMapper;
     }
 
     public void sendOutbidNotification(Long previousBidderId, Long auctionId) {
-        String mensaje = String.format("Usuario %d: Tu puja en la subasta %d ha sido superada.", previousBidderId, auctionId);
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("outbidUserId", previousBidderId);
+            payload.put("auctionId", auctionId);
 
-        // Se suma a la cola
-        rabbitTemplate.convertAndSend(RabbitMQConfig.NOTIFICATIONS_QUEUE, mensaje);
+            String jsonMessage = objectMapper.writeValueAsString(payload);
+            rabbitTemplate.convertAndSend(RabbitMQConfig.NOTIFICATIONS_QUEUE, jsonMessage);
 
-        logger.info("📬 Evento enviado a RabbitMQ: {}", mensaje);
+            logger.info("📬 Evento Ligero (Thin Event) enviado a RabbitMQ: {}", jsonMessage);
+        } catch (Exception e) {
+            logger.error("Error al convertir el evento ligero a JSON", e);
+        }
     }
 }
