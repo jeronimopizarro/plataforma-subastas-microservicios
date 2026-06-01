@@ -1,13 +1,5 @@
 import { apiClient } from '../../../shared/services/api';
-
-export interface Bid {
-  id: number;
-  auctionId: number;
-  bidderId: number;
-  bidderEmail?: string;
-  amount: number;
-  timestamp: string;
-}
+import type { Bid } from '../types/bidding.types';
 
 export const biddingService = {
   // Llama al POST /bids

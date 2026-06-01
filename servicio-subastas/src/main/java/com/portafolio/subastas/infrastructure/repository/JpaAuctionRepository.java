@@ -4,6 +4,8 @@ import com.portafolio.subastas.domain.enums.AuctionStatus;
 import com.portafolio.subastas.infrastructure.entity.AuctionEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -22,4 +24,7 @@ public interface JpaAuctionRepository extends JpaRepository<AuctionEntity, Long>
     boolean existsByProductIdAndStatusIn(Long productId, Collection<AuctionStatus> statuses);
 
     List<AuctionEntity> findByWinnerIdAndStatus(Long winnerId, AuctionStatus status);
+
+    @Query("SELECT a FROM AuctionEntity a WHERE a.productId IN (SELECT p.id FROM ProductEntity p WHERE p.sellerId = :sellerId)")
+    List<AuctionEntity> findAuctionsBySellerId(@Param("sellerId") Long sellerId);
 }

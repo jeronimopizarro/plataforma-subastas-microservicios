@@ -7,6 +7,7 @@ import com.portafolio.subastas.domain.enums.AuctionStatus;
 import com.portafolio.subastas.web.dto.AuctionResponse;
 import com.portafolio.subastas.web.dto.UpdateBidRequest;
 import com.portafolio.subastas.web.mapper.AuctionResponseMapper;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,13 +26,14 @@ public class AuctionController {
     private final UpdateAuctionBidUseCase updateAuctionBidUseCase;
     private final AuctionResponseMapper auctionResponseMapper;
     private final FindWonAuctionsUseCase findWonAuctionsUseCase;
+    private final FindAuctionsBySellerUseCase findAuctionsBySellerUseCase;
 
     public AuctionController(CreateAuctionUseCase createAuctionUseCase,
                              FindAuctionByIdUseCase findAuctionByIdUseCase,
                              ListAuctionsByStatusUseCase listAuctionsByStatusUseCase,
                              CancelAuctionUseCase cancelAuctionUseCase,
                              UpdateAuctionBidUseCase updateAuctionBidUseCase,
-                             AuctionResponseMapper auctionResponseMapper, FindWonAuctionsUseCase findWonAuctionsUseCase) {
+                             AuctionResponseMapper auctionResponseMapper, FindWonAuctionsUseCase findWonAuctionsUseCase, FindAuctionsBySellerUseCase findAuctionsBySellerUseCase) {
         this.createAuctionUseCase = createAuctionUseCase;
         this.findAuctionByIdUseCase = findAuctionByIdUseCase;
         this.listAuctionsByStatusUseCase = listAuctionsByStatusUseCase;
@@ -39,6 +41,7 @@ public class AuctionController {
         this.updateAuctionBidUseCase = updateAuctionBidUseCase;
         this.auctionResponseMapper = auctionResponseMapper;
         this.findWonAuctionsUseCase = findWonAuctionsUseCase;
+        this.findAuctionsBySellerUseCase = findAuctionsBySellerUseCase;
     }
 
     @PostMapping
@@ -91,6 +94,20 @@ public class AuctionController {
         List<Auction> wonAuctions = findWonAuctionsUseCase.execute(Long.valueOf(userId));
 
         List<AuctionResponse> response = wonAuctions.stream()
+                .map(auctionResponseMapper::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/seller")
+    @Operation(summary = "Obtener todas las subastas creadas por el vendedor actual")
+    public ResponseEntity<List<AuctionResponse>> getAuctionsBySeller(@RequestHeader("X-User-Id") String userId) {
+        Long sellerId = Long.valueOf(userId);
+
+        List<Auction> sellerAuctions = findAuctionsBySellerUseCase.execute(sellerId);
+
+        List<AuctionResponse> response = sellerAuctions.stream()
                 .map(auctionResponseMapper::toResponse)
                 .toList();
 

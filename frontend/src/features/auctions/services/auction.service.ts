@@ -30,8 +30,14 @@ export const auctionService = {
     const response = await apiClient.post<Auction>('/auctions', auctionData);
     return response.data;
   },
+  
   getWonAuctions: async (): Promise<Auction[]> => {
     const response = await apiClient.get<Auction[]>('/auctions/won');
+    return response.data;
+  },
+
+  getAuctionsBySeller: async (): Promise<Auction[]> => {
+    const response = await apiClient.get<Auction[]>('/auctions/seller');
     return response.data;
   }
 };

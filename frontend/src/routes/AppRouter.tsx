@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import { WalletPage } from '../features/wallet/pages/WalletPage';
 import { RegisterPage } from '../features/auth/pages/RegisterPage';
 import { AuctionDetailPage } from '../features/auctions/pages/AuctionDetailPage';
+import { SellerDashboardPage } from '../features/auctions/pages/SellerDashboardPage';
 
 
 // Un "Guard" que protege las rutas privadas
@@ -47,6 +48,7 @@ export const AppRouter = () => {
           <Route path="auctions/:id" element={<AuctionDetailPage />} />
           <Route path="wallet" element={<WalletPage />} />
           <Route path="bids" element={<Placeholder title="Historial de Pujas" />} />
+          <Route path="/my-publications" element={<SellerDashboardPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

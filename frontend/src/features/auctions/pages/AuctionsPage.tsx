@@ -3,6 +3,7 @@ import type { Auction } from '../types/auction.types';
 import { auctionService } from '../services/auction.service';
 import { AuctionCard } from '../components/AuctionCard';
 import { CreateAuctionModal } from '../components/CreateAuctionModal';
+import { CreateAuctionButton } from '../components/CreateAuctionButton';
 
 export const AuctionsPage: React.FC = () => {
   const [auctions, setAuctions] = useState<Auction[]>([]);
@@ -32,12 +33,7 @@ export const AuctionsPage: React.FC = () => {
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
         <h1 style={{ color: 'var(--color-dark)', margin: 0 }}>Explorar Subastas</h1>
-        <button 
-          onClick={() => setIsModalOpen(true)} // <-- ESTO
-          style={{ backgroundColor: 'var(--color-primary)', color: 'white', padding: '10px 20px', borderRadius: '6px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
-        >
-          + Crear Subasta
-        </button>
+        <CreateAuctionButton onSuccess={() => window.location.reload()} />
       </div>
 
       {/* Filtros */}

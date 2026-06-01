@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { walletService } from '../services/wallet.service';
-import { biddingService, type Bid } from '../../auctions/services/bidding.service';
+import { biddingService } from '../../bidding/services/bidding.service';
 import { auctionService } from '../../auctions/services/auction.service'; // <-- Importamos el servicio de subastas
 import type { Wallet } from '../types/wallet.types';
 import type { Auction } from '../../auctions/types/auction.types'; // <-- Importamos el tipo Auction
 import { Link } from 'react-router-dom';
+import type { Bid } from '../../bidding/types/bidding.types';
 
 export const WalletPage = () => {
   const [wallet, setWallet] = useState<Wallet | null>(null);

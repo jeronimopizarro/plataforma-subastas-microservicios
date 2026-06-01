@@ -5,10 +5,11 @@ import SockJS from 'sockjs-client';
 
 import { auctionService } from '../services/auction.service';
 import { walletService } from '../../wallet/services/wallet.service';
-import { biddingService, type Bid } from '../services/bidding.service';
+import { biddingService } from '../../bidding/services/bidding.service';
 
 import type { Auction } from '../types/auction.types';
 import type { Product } from '../types/product.types';
+import type { Bid } from '../../bidding/types/bidding.types';
 
 export const AuctionDetailPage = () => {
   const { id } = useParams<{ id: string }>();

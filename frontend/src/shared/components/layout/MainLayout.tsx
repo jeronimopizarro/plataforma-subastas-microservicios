@@ -33,6 +33,12 @@ export const MainLayout = () => {
           <Link to="/auctions" style={{ color: 'var(--color-light)', textDecoration: 'none', fontSize: '1.1rem' }}>
             🛒 Catálogo de Subastas
           </Link>
+          <Link 
+              to="/my-publications" 
+              style={{ color: 'var(--color-light)', textDecoration: 'none', fontSize: '1.1rem' }}
+            >
+              📦 Mis Publicaciones
+            </Link>
           <Link to="/wallet" style={{ color: 'var(--color-light)', textDecoration: 'none', fontSize: '1.1rem' }}>
             💳 Mi Billetera y Actividad
           </Link>

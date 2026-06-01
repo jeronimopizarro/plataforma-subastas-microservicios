@@ -77,4 +77,12 @@ public class AuctionRepositoryAdapter implements AuctionRepository {
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Auction> findAuctionsBySellerId(Long sellerId) {
+        return jpaRepository.findAuctionsBySellerId(sellerId)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }
