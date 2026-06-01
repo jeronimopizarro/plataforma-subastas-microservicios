@@ -4,6 +4,8 @@ import com.portafolio.subastas.application.util.AuctionStateProcessor;
 import com.portafolio.subastas.domain.entity.Auction;
 import com.portafolio.subastas.domain.enums.AuctionStatus;
 import com.portafolio.subastas.domain.repository.AuctionRepository;
+import com.portafolio.subastas.domain.repository.ProductRepository;
+import com.portafolio.subastas.infrastructure.client.WalletFeignClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,10 +28,21 @@ class FinishAuctionsUseCaseTest {
 
     private FinishAuctionsUseCase finishAuctionsUseCase;
 
+    @Mock
+    private ProductRepository productRepository;
+
+    @Mock
+    private WalletFeignClient walletClient;
+
     @BeforeEach
     void setUp() {
         AuctionStateProcessor stateProcessor = new AuctionStateProcessor(auctionRepository);
-        finishAuctionsUseCase = new FinishAuctionsUseCase(auctionRepository, stateProcessor);
+        finishAuctionsUseCase = new FinishAuctionsUseCase(
+                auctionRepository,
+                productRepository,
+                walletClient,
+                stateProcessor
+        );
     }
 
     @Test
