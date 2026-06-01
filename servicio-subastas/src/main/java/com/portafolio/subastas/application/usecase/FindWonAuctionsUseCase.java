@@ -1,6 +1,7 @@
 package com.portafolio.subastas.application.usecase;
 
 import com.portafolio.subastas.domain.entity.Auction;
+import com.portafolio.subastas.domain.enums.AuctionStatus;
 import com.portafolio.subastas.domain.repository.AuctionRepository;
 import org.springframework.stereotype.Component;
 import java.util.List;
@@ -14,6 +15,6 @@ public class FindWonAuctionsUseCase {
     }
 
     public List<Auction> execute(Long winnerId) {
-        return auctionRepository.findByWinnerId(winnerId);
+        return auctionRepository.findByWinnerIdAndStatus(winnerId, AuctionStatus.FINISHED);
     }
 }

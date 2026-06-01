@@ -21,5 +21,5 @@ public interface JpaAuctionRepository extends JpaRepository<AuctionEntity, Long>
 
     boolean existsByProductIdAndStatusIn(Long productId, Collection<AuctionStatus> statuses);
 
-    List<AuctionEntity> findByWinnerId(Long winnerId);
+    List<AuctionEntity> findByWinnerIdAndStatus(Long winnerId, AuctionStatus status);
 }

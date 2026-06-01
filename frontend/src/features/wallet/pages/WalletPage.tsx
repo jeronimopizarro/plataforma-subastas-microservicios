@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { walletService } from '../services/wallet.service';
-import { biddingService, type Bid } from '../../auctions/services/bidding.service'; // <-- Importamos el servicio de pujas
+import { biddingService, type Bid } from '../../auctions/services/bidding.service';
+import { auctionService } from '../../auctions/services/auction.service'; // <-- Importamos el servicio de subastas
 import type { Wallet } from '../types/wallet.types';
+import type { Auction } from '../../auctions/types/auction.types'; // <-- Importamos el tipo Auction
 import { Link } from 'react-router-dom';
 
 export const WalletPage = () => {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [amountToAdd, setAmountToAdd] = useState('');
-  const [myBids, setMyBids] = useState<Bid[]>([]); // <-- Estado para el historial
+  const [myBids, setMyBids] = useState<Bid[]>([]);
+  const [wonAuctions, setWonAuctions] = useState<Auction[]>([]); // <-- Nuevo estado para subastas ganadas
   const [loading, setLoading] = useState(true);
 
   const userIdFromStorage = localStorage.getItem('userId');
@@ -16,19 +19,21 @@ export const WalletPage = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      // Ejecutamos ambas peticiones en paralelo para mayor velocidad
-      const [walletData, bidsData] = await Promise.all([
+      // Ejecutamos las 3 peticiones en paralelo
+      const [walletData, bidsData, wonData] = await Promise.all([
         walletService.getWallet().catch(err => {
           if (err.response?.status === 404) {
             return { id: 0, userId: CURRENT_USER_ID, availableBalance: 0, heldFunds: 0 };
           }
           throw err;
         }),
-        biddingService.getMyBids().catch(() => []) // Si falla, devolvemos array vacío
+        biddingService.getMyBids().catch(() => []),
+        auctionService.getWonAuctions().catch(() => []) // <-- Traemos las ganadas
       ]);
 
       setWallet(walletData);
       setMyBids(bidsData);
+      setWonAuctions(wonData); // <-- Guardamos en el estado
     } catch (err) {
       console.error("Error al cargar los datos del dashboard", err);
     } finally {
@@ -48,7 +53,7 @@ export const WalletPage = () => {
     try {
       await walletService.addFunds(amount); 
       setAmountToAdd('');
-      loadDashboardData(); // Recargamos para ver el nuevo saldo
+      loadDashboardData();
     } catch (err) {
       alert('Hubo un error al intentar agregar fondos. Verifica estar autenticado.');
     }
@@ -101,6 +106,50 @@ export const WalletPage = () => {
         </div>
       </div>
 
+      {/* NUEVA SECCIÓN MEDIA: SUBASTAS GANADAS */}
+      <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginBottom: '30px', borderLeft: '5px solid #28a745' }}>
+        <h3 style={{ margin: '0 0 20px 0', color: 'var(--color-dark)', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
+          🏆 Mis Subastas Ganadas
+        </h3>
+        
+        {wonAuctions.length === 0 ? (
+          <p style={{ color: '#888', textAlign: 'center', padding: '20px 0' }}>Aún no has ganado ninguna subasta.</p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f9f9f9', color: '#555' }}>
+                  <th style={{ padding: '12px', borderBottom: '2px solid #eee' }}>ID Subasta</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid #eee' }}>Fecha de Cierre</th>
+                  <th style={{ padding: '12px', borderBottom: '2px solid #eee' }}>Monto Ganador</th>
+                </tr>
+              </thead>
+              <tbody>
+                {wonAuctions.map((auction) => (
+                  <tr key={auction.id} style={{ borderBottom: '1px solid #eee', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                    <td style={{ padding: '12px', fontWeight: 'bold' }}>
+                      <Link 
+                        to={`/auctions/${auction.id}`} 
+                        style={{ color: '#28a745', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
+                        title="Ver detalles del producto ganado"
+                      >
+                        #{auction.id} 🔗
+                      </Link>
+                    </td>
+                    <td style={{ padding: '12px', color: '#666' }}>
+                      {new Date(auction.endTime).toLocaleDateString()} a las {new Date(auction.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </td>
+                    <td style={{ padding: '12px', fontWeight: 'bold', color: 'var(--color-dark)' }}>
+                      ${auction.currentHighestBid.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {/* SECCIÓN INFERIOR: HISTORIAL DE PUJAS */}
       <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
         <h3 style={{ margin: '0 0 20px 0', color: 'var(--color-dark)', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
@@ -128,7 +177,6 @@ export const WalletPage = () => {
                       {new Date(bid.timestamp).toLocaleDateString()} a las {new Date(bid.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </td>
                     
-                    {/* COLUMNA ACTUALIZADA CON EL ENLACE */}
                     <td style={{ padding: '12px', fontWeight: 'bold' }}>
                       <Link 
                         to={`/auctions/${bid.auctionId}`} 

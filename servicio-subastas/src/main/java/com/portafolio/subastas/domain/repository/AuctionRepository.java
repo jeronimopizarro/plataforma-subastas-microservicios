@@ -21,5 +21,5 @@ public interface AuctionRepository {
 
     boolean existsActiveAuctionForProduct(Long productId);
 
-    List<Auction> findByWinnerId(Long winnerId);
+    List<Auction> findByWinnerIdAndStatus(Long winnerId, AuctionStatus status);
 }
