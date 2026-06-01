@@ -21,6 +21,22 @@ services:
     ports:
       - "6379:6379"
 
+  # Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: subastas-rabbitmq
+    ports:
+      - "5672:5672"   # Puerto interno para Spring Boot
+      - "15672:15672" # Puerto para el panel web (UI)
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   # Microservicios
   servicio-subastas:
     build: ./servicio-subastas
@@ -50,6 +66,7 @@ services:
       - TZ=America/Argentina/Buenos_Aires
     depends_on:
       - mysql
+      - rabbitmq
     restart: on-failure
 
   servicio-usuarios:
@@ -61,6 +78,15 @@ services:
       - TZ=America/Argentina/Buenos_Aires
     depends_on:
       - mysql
+    restart: on-failure
+
+  servicio-notificaciones:
+    build: ./servicio-notificaciones
+    container_name: servicio-notificaciones
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+    depends_on:
+      - rabbitmq # Obliga a que RabbitMQ levante antes que este servicio
     restart: on-failure
 
   api-gateway:
@@ -78,6 +104,5 @@ services:
       - redis
     restart: on-failure
 
-# <-- Y no te olvides de declarar el volumen al final de todo el archivo
 volumes:
   mysql_data:

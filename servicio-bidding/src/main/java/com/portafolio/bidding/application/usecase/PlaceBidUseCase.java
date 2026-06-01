@@ -6,6 +6,7 @@ import com.portafolio.bidding.domain.entity.Bid;
 import com.portafolio.bidding.domain.exception.DomainException;
 import com.portafolio.bidding.domain.exception.ErrorCode;
 import com.portafolio.bidding.domain.repository.BidRepository;
+import com.portafolio.bidding.infrastructure.adapter.RabbitMQNotificationPublisher;
 import com.portafolio.bidding.infrastructure.client.AuctionFeignClient;
 import com.portafolio.bidding.infrastructure.client.UserFeignClient;
 import com.portafolio.bidding.infrastructure.client.WalletFeignClient;
@@ -29,18 +30,20 @@ public class PlaceBidUseCase {
     private final BidRepository bidRepository;
     private final BidEventPublisher bidEventPublisher;
     private final UserFeignClient userFeignClient;
+    private final RabbitMQNotificationPublisher notificationPublisher;
     private static final Logger logger = LoggerFactory.getLogger(PlaceBidUseCase.class);
 
     public PlaceBidUseCase(AuctionFeignClient auctionClient,
                            WalletFeignClient walletClient,
                            BidRepository bidRepository,
                            BidEventPublisher bidEventPublisher,
-                           UserFeignClient userFeignClient) {
+                           UserFeignClient userFeignClient, RabbitMQNotificationPublisher notificationPublisher) {
         this.auctionClient = auctionClient;
         this.walletClient = walletClient;
         this.bidRepository = bidRepository;
         this.bidEventPublisher = bidEventPublisher;
         this.userFeignClient = userFeignClient;
+        this.notificationPublisher = notificationPublisher;
     }
 
     @CircuitBreaker(name = "subastas", fallbackMethod = "fallbackPlaceBid")
@@ -58,13 +61,14 @@ public class PlaceBidUseCase {
 
             releaseFundsForPreviousWinner(auction, command.auctionId());
 
+            notifyPreviousBidderIfOutbid(auction, command.bidderId(), command.auctionId());
+
             Bid savedBid = saveBidHistory(command.auctionId(), command.bidderId(), command.amount());
 
             String rawEmail;
             try {
                 rawEmail = userFeignClient.getUserEmail(savedBid.getBidderId()).get("email");
             } catch (Exception e) {
-                // CAMBIO TEMPORAL PARA DEBUGEAR
                 logger.error("¡ERROR EN FEIGN! El servicio de usuarios falló al consultar el ID {}. Error: {}",
                         savedBid.getBidderId(), e.getMessage());
                 rawEmail = "error-de-comunicacion@sistema.com";
@@ -72,9 +76,7 @@ public class PlaceBidUseCase {
 
             String maskedEmail = maskEmail(rawEmail);
 
-            // Actualizamos la llamada al publicador agregando el maskedEmail
             bidEventPublisher.publishNewBid(savedBid.getAuctionId(), savedBid.getBidderId(), maskedEmail, savedBid.getAmount());
-            // --- FIN NUEVA LÓGICA --
             return savedBid;
 
         } catch (Exception e) {
@@ -125,6 +127,12 @@ public class PlaceBidUseCase {
         }
     }
 
+    private void notifyPreviousBidderIfOutbid(AuctionResponse auction, Long newBidderId, Long auctionId) {
+        if (auction.winnerId() != null && !auction.winnerId().equals(newBidderId)) {
+            notificationPublisher.sendOutbidNotification(auction.winnerId(), auctionId);
+        }
+    }
+
     private Bid saveBidHistory(Long auctionId, Long bidderId, BigDecimal amount) {
         Bid newBid = Bid.createNew(auctionId, bidderId, amount);
         return bidRepository.save(newBid);
@@ -134,7 +142,6 @@ public class PlaceBidUseCase {
         walletClient.releaseFunds(bidderId, new TransactionRequest(amount, "Devolución por error en puja: " + auctionId));
     }
 
-    // --- NUEVO MÉTODO PRIVADO PARA ENMASCARAR ---
     private String maskEmail(String email) {
         if (email == null || !email.contains("@")) return "***";
         String[] parts = email.split("@");
