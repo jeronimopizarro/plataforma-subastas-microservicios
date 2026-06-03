@@ -124,6 +124,18 @@ services:
       - rabbitmq
     restart: on-failure
 
+  servicio-analytics:
+    build: ./servicio-analytics
+    container_name: servicio-analytics
+    ports:
+      - "8085:8085"
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+    depends_on:
+      - kafka
+      - postgres-analytics
+    restart: on-failure
+
   api-gateway:
     build: ./api-gateway
     ports:
