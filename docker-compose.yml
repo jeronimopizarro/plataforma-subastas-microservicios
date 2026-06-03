@@ -119,6 +119,7 @@ services:
     container_name: servicio-notificaciones
     environment:
       - TZ=America/Argentina/Buenos_Aires
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
     depends_on:
       - rabbitmq
     restart: on-failure

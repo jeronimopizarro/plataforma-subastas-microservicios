@@ -1,1 +1,4 @@
 .idea/
+
+# Archivos de entorno (Secretos)
+.env
