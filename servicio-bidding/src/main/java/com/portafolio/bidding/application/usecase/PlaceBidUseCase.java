@@ -6,6 +6,7 @@ import com.portafolio.bidding.domain.entity.Bid;
 import com.portafolio.bidding.domain.exception.DomainException;
 import com.portafolio.bidding.domain.exception.ErrorCode;
 import com.portafolio.bidding.domain.repository.BidRepository;
+import com.portafolio.bidding.infrastructure.adapter.KafkaAnalyticsPublisher;
 import com.portafolio.bidding.infrastructure.adapter.RabbitMQNotificationPublisher;
 import com.portafolio.bidding.infrastructure.client.AuctionFeignClient;
 import com.portafolio.bidding.infrastructure.client.UserFeignClient;
@@ -31,19 +32,21 @@ public class PlaceBidUseCase {
     private final BidEventPublisher bidEventPublisher;
     private final UserFeignClient userFeignClient;
     private final RabbitMQNotificationPublisher notificationPublisher;
+    private final KafkaAnalyticsPublisher kafkaAnalyticsPublisher;
     private static final Logger logger = LoggerFactory.getLogger(PlaceBidUseCase.class);
 
     public PlaceBidUseCase(AuctionFeignClient auctionClient,
                            WalletFeignClient walletClient,
                            BidRepository bidRepository,
                            BidEventPublisher bidEventPublisher,
-                           UserFeignClient userFeignClient, RabbitMQNotificationPublisher notificationPublisher) {
+                           UserFeignClient userFeignClient, RabbitMQNotificationPublisher notificationPublisher, KafkaAnalyticsPublisher kafkaAnalyticsPublisher) {
         this.auctionClient = auctionClient;
         this.walletClient = walletClient;
         this.bidRepository = bidRepository;
         this.bidEventPublisher = bidEventPublisher;
         this.userFeignClient = userFeignClient;
         this.notificationPublisher = notificationPublisher;
+        this.kafkaAnalyticsPublisher = kafkaAnalyticsPublisher;
     }
 
     @CircuitBreaker(name = "subastas", fallbackMethod = "fallbackPlaceBid")
@@ -77,6 +80,8 @@ public class PlaceBidUseCase {
             String maskedEmail = maskEmail(rawEmail);
 
             bidEventPublisher.publishNewBid(savedBid.getAuctionId(), savedBid.getBidderId(), maskedEmail, savedBid.getAmount());
+
+            kafkaAnalyticsPublisher.publishBidEvent(savedBid.getAuctionId(), savedBid.getBidderId(), savedBid.getAmount());
             return savedBid;
 
         } catch (Exception e) {
